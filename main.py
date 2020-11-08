@@ -18,13 +18,15 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 ## Mlflow configuration ##
+#
 # mlflow.set_experiment("") # Experiment name
 #
 # os.environ['MLFLOW_TRACKING_URI'] # Mlflow tracking server for example http://localhost:5000
 # os.environ['MLFLOW_S3_ENDPOINT_URL'] # S3 Registry (container minIO) for example http://localhost:9000
+#
 ##########################
 
-def main(**kwargs):
+def main(**kwargs) -> None:
 
     if kwargs.get("path_to_tokenizer") is None:
         tokenizer = train_trokenizer(**{
@@ -33,10 +35,10 @@ def main(**kwargs):
         })
     else:
         tokenizer = tokenizers.Tokenizer.from_file(kwargs.get("path_to_tokenizer"))
-    
+
     kwargs["vocab_size"] = tokenizer.get_vocab_size()
 
-    trainDataset = TextDataset(kwargs.get("path_to_data_train"), tokenizer, kwargs.get("bptt"), kwargs.get("batch_size"))
+    trainDataset = TextDataset(kwargs.get("path_to_data_test"), tokenizer, kwargs.get("bptt"), kwargs.get("batch_size"))
     testDataset = TextDataset(kwargs.get("path_to_data_test"), tokenizer, kwargs.get("bptt"), kwargs.get("batch_size"))
 
     Model = LSTMModel(**kwargs)
@@ -49,11 +51,34 @@ def main(**kwargs):
 
     logger.info("Start training for: {}".format(kwargs.get("epochs")))
 
-    for _ in range(kwargs.get("epochs")):
+    global_train_it = 0
+    global_eval_it = 0
+
+    best_loss = 50
+
+    for _ in tqdm.tqdm(range(kwargs.get("epochs"))):
         # Train
+        _, global_train_it = train_model(
+            Model,
+            trainDataset,
+            Criterion,
+            Optimizer,
+            global_train_it
+        )
 
         # Test
-        pass
+        eval_loss, global_eval_it = eval_model(
+            Model,
+            testDataset,
+            Criterion,
+            global_eval_it
+        )
+
+        if eval_loss < best_loss:
+            # Store artifacts
+            with open("config_file.json", "w") as file:
+                json.dump(file, **kwargs)
+
 
 if __name__ == "__main__":
     argument_parser = argparse.ArgumentParser()
