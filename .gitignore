@@ -128,5 +128,7 @@ dmypy.json
 # VSCode
 .vscode
 
+mlruns
+
 # Pyre type checker
 .pyre/
