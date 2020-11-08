@@ -38,7 +38,7 @@ def main(**kwargs) -> None:
 
     kwargs["vocab_size"] = tokenizer.get_vocab_size()
 
-    trainDataset = TextDataset(kwargs.get("path_to_data_test"), tokenizer, kwargs.get("bptt"), kwargs.get("batch_size"))
+    trainDataset = TextDataset(kwargs.get("path_to_data_train"), tokenizer, kwargs.get("bptt"), kwargs.get("batch_size"))
     testDataset = TextDataset(kwargs.get("path_to_data_test"), tokenizer, kwargs.get("bptt"), kwargs.get("batch_size"))
 
     Model = LSTMModel(**kwargs)
