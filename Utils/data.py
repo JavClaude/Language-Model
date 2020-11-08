@@ -20,6 +20,7 @@ class TextDataset():
                 batch_size: int) -> None:
         
         self.bptt = bptt
+        self.batch_size = batch_size
 
         texts_ids = []
         with open(path_to_txt, "r") as file:
@@ -35,15 +36,13 @@ class TextDataset():
         self.target_texts_ids = np.zeros_like(self.texts_ids)
         self.target_texts_ids[:-1] = self.texts_ids[1:]
         self.target_texts_ids[-1] = self.texts_ids[0]
-        
     
-    def get_batches(self, i):
+    def __len__(self) -> int:
+        return self.texts_ids.shape[-1]
+    
+    def get_batches(self, i) -> tuple:
         return (
             torch.tensor(self.texts_ids[:, i:i+self.bptt], dtype=torch.long, device=device),
             torch.tensor(self.target_texts_ids[:, i:i+self.bptt], dtype=torch.long, device=device)
         )
-
-
-
-
         
