@@ -20,9 +20,9 @@ class LSTMModel(torch.nn.Module):
 
         self.Embedding = torch.nn.Embedding(vocab_size, embedding_dim)
         self.D1 = torch.nn.Dropout(dropout)
-        self.LN = torch.nn.LayerNorm()
+        self.LN = torch.nn.LayerNorm(embedding_dim)
         self.Encoder = torch.nn.LSTM(embedding_dim, hidden_units, num_layers=n_layers, batch_first=True, dropout=dropout_rnn, bidirectional=bidirectional)
-        self.LN2 = torch.nn.LayerNorm()
+        self.LN2 = torch.nn.LayerNorm(hidden_units)
         self.D2 = torch.nn.Dropout(dropout)
         self.Decoder = torch.nn.Linear(hidden_units*2 if bidirectional else hidden_units, vocab_size)
     

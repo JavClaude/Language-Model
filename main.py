@@ -27,7 +27,7 @@ logger.setLevel(logging.INFO)
 def main(**kwargs):
 
     if kwargs.get("path_to_tokenizer") is None:
-        tokenizer = train_trokenizer({
+        tokenizer = train_trokenizer(**{
             "path_to_textfile": kwargs.get("path_to_data_train"),
             "num_merges": kwargs.get("num_merges")
         })
@@ -68,6 +68,7 @@ if __name__ == "__main__":
     argument_parser.add_argument("--clip_grad_norm", type=float, required=False, default=3)
     argument_parser.add_argument("--embedding_dim", type=int, required=False, default=300)
     argument_parser.add_argument("--hidden_units", type=int, required=False, default=256)
+    argument_parser.add_argument("--n_layers", type=int, required=False, default=3)
     argument_parser.add_argument("--bidirectional", type=bool, required=False, default=False)
     argument_parser.add_argument("--dropout_rnn", type=float, required=False, default=0.4)
     argument_parser.add_argument("--dropout", type=float, required=False, default=0.5)

@@ -29,14 +29,18 @@ class TextDataset():
                 )
         
         flat_texts_ids = list(itertools.chain.from_iterable((texts_ids)))    
-        self.n_batches = len(flat_texts_ids) // batch_size
-        flat_texts_ids = np.array(flat_texts_ids[0: self.n_batches*batch_size])
-        self.texts_ids = flat_texts_ids.reshape(batch_size, -1)
+        self.n_batches = len(flat_texts_ids) // (batch_size*bptt)
+        self.texts_ids = np.reshape(flat_texts_ids[0: self.n_batches*batch_size*bptt], (batch_size, -1))
+
+        self.target_texts_ids = np.zeros_like(self.texts_ids)
+        self.target_texts_ids[:-1] = self.texts_ids[1:]
+        self.target_texts_ids[-1] = self.texts_ids[0]
+        
     
     def get_batches(self, i):
         return (
-            torch.tensor(self.texts_ids[:, i+1:i+self.bptt+1], dtype=torch.long, device=device),
-            torch.tensor(self.texts_ids[:, i+1:i+self.bptt+1], dtype=torch.long, device=device)
+            torch.tensor(self.texts_ids[:, i:i+self.bptt], dtype=torch.long, device=device),
+            torch.tensor(self.target_texts_ids[:, i:i+self.bptt], dtype=torch.long, device=device)
         )
 
 
