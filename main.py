@@ -77,7 +77,9 @@ def main(**kwargs) -> None:
         if eval_loss < best_loss:
             # Store artifacts
             with open("config_file.json", "w") as file:
-                json.dump(file, **kwargs)
+                json.dumps(kwargs, file)
+            
+            torch.save(Model.state_dict(), "model_state_dict.pt")
 
 
 if __name__ == "__main__":
