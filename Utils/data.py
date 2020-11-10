@@ -34,8 +34,8 @@ class TextDataset():
         self.texts_ids = np.reshape(flat_texts_ids[0: self.n_batches*batch_size*bptt], (batch_size, -1))
 
         self.target_texts_ids = np.zeros_like(self.texts_ids)
-        self.target_texts_ids[:-1] = self.texts_ids[1:]
-        self.target_texts_ids[-1] = self.texts_ids[0]
+        self.target_texts_ids[:, :-1] = self.texts_ids[:, 1:]
+        self.target_texts_ids[:, -1] = self.texts_ids[:, 0]
     
     def __len__(self) -> int:
         return self.texts_ids.shape[-1]
