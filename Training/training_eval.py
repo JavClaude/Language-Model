@@ -25,6 +25,8 @@ def train_model(model: torch.nn.Module, train_iterator, criterion, optimizer, gl
         loss.backward()
 
         optimizer.step()
+        _ = torch.nn.utils.clip_grad_norm_(model.parameters(), 0.25)
+
         model.zero_grad()
 
         # Mlflow tracking metric #
@@ -60,7 +62,8 @@ def eval_model(model, test_iterator, criterion, global_eval_it):
             loss = criterion(logits.transpose(2, 1), seq_target)
         
             # Mlflow tracking metric
-
+            mlflow.log_metric("eval loss", loss.item(), step=global_eval_it)
+            global_eval_it += 1
             epoch_loss += loss.item()
             local_eval_it += 1
         
