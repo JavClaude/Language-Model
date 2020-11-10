@@ -19,7 +19,7 @@ logger.setLevel(logging.INFO)
 
 ## Mlflow configuration ##
 #
-# mlflow.set_experiment("") # Experiment name
+mlflow.set_experiment("LM Finance") # Experiment name
 #
 # os.environ['MLFLOW_TRACKING_URI'] # Mlflow tracking server for example http://localhost:5000
 # os.environ['MLFLOW_S3_ENDPOINT_URL'] # S3 Registry (container minIO) for example http://localhost:9000
@@ -27,6 +27,10 @@ logger.setLevel(logging.INFO)
 ##########################
 
 def main(**kwargs) -> None:
+    if os.path.isdir("tmp"):
+        pass
+    else:
+        os.mkdir("tmp")
 
     if kwargs.get("path_to_tokenizer") is None:
         tokenizer = train_trokenizer(**{
@@ -36,6 +40,7 @@ def main(**kwargs) -> None:
     else:
         tokenizer = tokenizers.Tokenizer.from_file(kwargs.get("path_to_tokenizer"))
 
+    tokenizer.save("tmp/tokenizer.bin")
     kwargs["vocab_size"] = tokenizer.get_vocab_size()
 
     trainDataset = TextDataset(kwargs.get("path_to_data_train"), tokenizer, kwargs.get("bptt"), kwargs.get("batch_size"))
@@ -50,6 +55,8 @@ def main(**kwargs) -> None:
     Model.to(device)
 
     logger.info("Start training for: {}".format(kwargs.get("epochs")))
+
+    mlflow.log_params(kwargs)
 
     global_train_it = 0
     global_eval_it = 0
@@ -76,10 +83,10 @@ def main(**kwargs) -> None:
 
         if eval_loss < best_loss:
             # Store artifacts
-            with open("config_file.json", "w") as file:
-                json.dumps(kwargs, file)
+            with open("tmp/config_file.json", "w") as file:
+                json.dump(kwargs, file)
             
-            torch.save(Model.state_dict(), "model_state_dict.pt")
+            torch.save(Model.state_dict(), "tmp/model_state_dict.pt")
 
 
 if __name__ == "__main__":
@@ -87,18 +94,18 @@ if __name__ == "__main__":
     argument_parser.add_argument("--path_to_data_train", type=str, required=True)
     argument_parser.add_argument("--path_to_data_test", type=str, required=True)
     argument_parser.add_argument("--path_to_tokenizer", type=str, required=False)
-    argument_parser.add_argument("--num_merges", type=int, required=False, default=30000)
+    argument_parser.add_argument("--num_merges", type=int, required=False, default=50000)
     argument_parser.add_argument("--epochs", type=int, required=False, default=3)
-    argument_parser.add_argument("--batch_size", type=int, required=False, default=64)
-    argument_parser.add_argument("--bptt", type=int, required=False, default=128)
+    argument_parser.add_argument("--batch_size", type=int, required=False, default=128)
+    argument_parser.add_argument("--bptt", type=int, required=False, default=64)
     argument_parser.add_argument("--lr", type=float, required=False, default=0.0001)
-    argument_parser.add_argument("--clip_grad_norm", type=float, required=False, default=3)
+    argument_parser.add_argument("--clip_grad_norm", type=float, required=False, default=1)
     argument_parser.add_argument("--embedding_dim", type=int, required=False, default=300)
     argument_parser.add_argument("--hidden_units", type=int, required=False, default=256)
-    argument_parser.add_argument("--n_layers", type=int, required=False, default=3)
+    argument_parser.add_argument("--n_layers", type=int, required=False, default=1)
     argument_parser.add_argument("--bidirectional", type=bool, required=False, default=False)
-    argument_parser.add_argument("--dropout_rnn", type=float, required=False, default=0.4)
-    argument_parser.add_argument("--dropout", type=float, required=False, default=0.5)
+    argument_parser.add_argument("--dropout_rnn", type=float, required=False, default=0.2)
+    argument_parser.add_argument("--dropout", type=float, required=False, default=0.3)
 
     arguments = argument_parser.parse_args()
 
