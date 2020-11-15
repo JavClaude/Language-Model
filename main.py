@@ -20,9 +20,10 @@ logger.setLevel(logging.INFO)
 ## Mlflow configuration ##
 #
 mlflow.set_experiment("LM Finance") # Experiment name
+artifact_path = "experiment_materials"
 #
 # os.environ['MLFLOW_TRACKING_URI'] # Mlflow tracking server for example http://localhost:5000
-# os.environ['MLFLOW_S3_ENDPOINT_URL'] # S3 Registry (container minIO) for example http://localhost:9000
+# os.environ['MLFLOW_S3_ENDPOINT_URL'] # S3 for example http://localhost:9000
 #
 ##########################
 
@@ -41,7 +42,10 @@ def main(**kwargs) -> None:
         tokenizer = tokenizers.Tokenizer.from_file(kwargs.get("path_to_tokenizer"))
 
     tokenizer.save("tmp/tokenizer.bin")
+    mlflow.log_artifact("tmp/tokenizer.bin", artifact_path)
+
     kwargs["vocab_size"] = tokenizer.get_vocab_size()
+    kwargs.pop["num_meges"]
 
     trainDataset = TextDataset(kwargs.get("path_to_data_train"), tokenizer, kwargs.get("bptt"), kwargs.get("batch_size"))
     testDataset = TextDataset(kwargs.get("path_to_data_test"), tokenizer, kwargs.get("bptt"), kwargs.get("batch_size"))
@@ -86,7 +90,8 @@ def main(**kwargs) -> None:
             with open("tmp/config_file.json", "w") as file:
                 json.dump(kwargs, file)
             
-            torch.save(Model.state_dict(), "tmp/model_state_dict.pt")
+            mlflow.log_artifact("tmp/config_file.json", artifact_path)
+            mlflow.pytorch.log_model(Model, artifact_path, code_paths=["Model/model"])
 
 
 if __name__ == "__main__":
@@ -110,4 +115,3 @@ if __name__ == "__main__":
     arguments = argument_parser.parse_args()
 
     main(**vars(arguments))
-
