@@ -1,18 +1,20 @@
 import logging
 from typing import Tuple, Union
 
+from torch import tensor, zeros
 from torch.cuda import is_available
 from torch.nn import CrossEntropyLoss, Embedding, LayerNorm, Linear, LSTM, Module
 from torch.optim import Adam
-from torch import tensor, zeros
+from torch.utils.tensorboard.writer import SummaryWriter
+
 from tqdm import tqdm
 
 from language_model.preprocessing.data import LanguageModelingDataset
 
 device = "cuda" if is_available() else "cpu"
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.NOTSET)
+writer = SummaryWriter()
 
 
 class LstmModel(Module):
@@ -26,7 +28,7 @@ class LstmModel(Module):
         Dimension that will be used for the embedding matrix
     hidden_units: int
         Dimension that will be used in the lstm layers
-    n_layers: int
+    num_layers: int
         Number of lstm layers to use
     dropout_rnn: float
         dropout rate to be used in the lstm layers
@@ -43,8 +45,14 @@ class LstmModel(Module):
         super(LstmModel, self).__init__()
 
         self.criterion = CrossEntropyLoss()
-        self.hidden_units = hidden_units
-        self.num_layers = num_layers
+
+        self._parameters = {
+            "vocabulary_size": vocabulary_size,
+            "embedding_dimension": embedding_dimension,
+            "hidden_units": hidden_units,
+            "num_layers": num_layers,
+            "dropout_rnn": dropout_rnn
+        }
 
         self.embedding_layer = Embedding(vocabulary_size, embedding_dimension) # Put someting for padding index
         self.first_norrmalization_layer = LayerNorm(embedding_dimension)
@@ -57,6 +65,16 @@ class LstmModel(Module):
         )
         self.second_normalization_layer = LayerNorm(hidden_units)
         self.decoder_layer = Linear(hidden_units, vocabulary_size)
+
+        # writer.add_hparams(
+        #     hparam_dict={
+        #         "embedding_dimension": embedding_dimension,
+        #         "hidden_units": hidden_units,
+        #         "num_layers": num_layers,
+        #         "dropout_rnn": dropout_rnn
+                
+        #     }
+        # )
     
     def forward(self, inputs: Tuple[tensor, tensor]) -> Tuple[tensor, tensor]:
         """Forward pass of the LstmModel
@@ -84,15 +102,15 @@ class LstmModel(Module):
     
     def init_hidden(self, batch_size: int) -> Tuple[tensor, tensor]:
         return (
-            zeros(size=(self.num_layers, batch_size, self.hidden_units), device=device),
-            zeros(size=(self.num_layers, batch_size, self.hidden_units), device=device)
+            zeros(size=(self._parameters["num_layers"], batch_size, self._parameters["hidden_units"]), device=device),
+            zeros(size=(self._parameters["num_layers"], batch_size, self._parameters["hidden_units"]), device=device)
         )
     
     def fit(
         self, 
         train_data_iterator: LanguageModelingDataset, 
         eval_data_iterator: Union[LanguageModelingDataset, None] = None, 
-        epochs: int = 1
+        epochs: int = 3
     ) -> None:
         """Fit the object
 
@@ -116,34 +134,65 @@ class LstmModel(Module):
 
         hidden_states = self.init_hidden(train_data_iterator.batch_size)
         
-        for epoch in range(epochs):
-            tmp_loss = 0
-            self.train()
-            for iteration in tqdm(range(0, len(train_data_iterator), train_data_iterator.bptt), desc="Training..."):
-                batch = train_data_iterator.get_batches(iteration)
-                batch = tuple(t.to(device) for t in batch)
-                train_sequence, target_sequence = batch
-
-                logits, hidden_states = self((train_sequence, hidden_states))
-                hidden_states = tuple(t.detach() for t in hidden_states)
-
-                loss = self.criterion(logits.transpose(2, 1), target_sequence)
-                loss.backward()
-                tmp_loss += loss.item()
-
-                self.optimizer.step()
-                self.zero_grad()
-        
-            logger.info(
-                "Epoch: {}, Loss: {}".format(
-                    epoch, tmp_loss / train_data_iterator.total_number_of_batches
-                )
+        if epochs < 1:
+            raise ValueError(
+                "You must provide a positive number of epochs"
             )
-            
+        else:
+            for epoch in range(epochs):
+                iteration = 0 
+                tmp_loss = 0
+                self.train()
+                for batch_index in tqdm(range(0, len(train_data_iterator), train_data_iterator.bptt), desc="Training..."):
+                    batch = train_data_iterator.get_batches(batch_index)
+                    batch = tuple(t.to(device) for t in batch)
+                    train_sequence, target_sequence = batch
+
+                    logits, hidden_states = self((train_sequence, hidden_states))
+                    hidden_states = tuple(t.detach() for t in hidden_states)
+
+                    loss = self.criterion(logits.transpose(2, 1), target_sequence)
+                    loss.backward()
+                    tmp_loss += loss.item()
+                    iteration += 1
+
+                    writer.add_scalar(
+                        "Training loss", 
+                        loss.item(),
+                        iteration
+                    )
+
+                    self.optimizer.step()
+                    self.zero_grad()
+
+                mean_epoch_loss = tmp_loss / train_data_iterator.total_number_of_batches
+
+                logger.info(
+                    "Epoch: {}, Loss: {}".format(
+                        epoch, mean_epoch_loss
+                    )
+                )
+
+                if eval_data_iterator is not None:
+                    mean_epoch_eval_loss = self._evaluate(eval_data_iterator)
+
             if eval_data_iterator is not None:
-                self._evaluate(eval_data_iterator)
-    
-    def _evaluate(self, data_iterator: LanguageModelingDataset) -> None:
+                writer.add_hparams(
+                    self._parameters,
+                    {
+                        "train loss": mean_epoch_loss,
+                        "eval loss": mean_epoch_eval_loss
+                    }
+                )
+            else:
+                writer.add_hparams(
+                    self._parameters,
+                    {
+                        "train loss": mean_epoch_loss
+                    }
+                )
+
+    def _evaluate(self, data_iterator: LanguageModelingDataset) -> float:
         self.to(device)
         self.eval()
 
@@ -153,9 +202,10 @@ class LstmModel(Module):
 
         hidden_states = self.init_hidden(data_iterator.batch_size)
         
+        iteration = 0
         tmp_loss = 0
-        for iteration in tqdm(range(0, len(data_iterator), data_iterator.bptt), desc="Evaluate..."):
-            batch = data_iterator.get_batches(iteration)
+        for batch_index in tqdm(range(0, len(data_iterator), data_iterator.bptt), desc="Evaluate..."):
+            batch = data_iterator.get_batches(batch_index)
             batch = tuple(t.to(device) for t in batch)
             train_sequence, target_sequence = batch
 
@@ -164,9 +214,20 @@ class LstmModel(Module):
 
             loss = self.criterion(logits.transpose(2, 1), target_sequence)
             tmp_loss += loss.item()
+            iteration += 1
+
+            writer.add_scalar(
+                "Evaluating Loss",
+                loss.item(),
+                iteration
+            )
+
+        mean_epoch_loss = tmp_loss / data_iterator.total_number_of_batches
 
         logger.info(
             "Evaluation Loss: {}".format(
-                tmp_loss / data_iterator.total_number_of_batches
+                mean_epoch_loss
             )
         )
+
+        return mean_epoch_loss
