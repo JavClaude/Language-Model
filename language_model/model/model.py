@@ -1,5 +1,5 @@
 import logging
-from typing import Tuple
+from typing import Tuple, Union
 
 from torch.cuda import is_available
 from torch.nn import CrossEntropyLoss, Embedding, LayerNorm, Linear, LSTM, Module
@@ -84,15 +84,15 @@ class LstmModel(Module):
     
     def init_hidden(self, batch_size: int) -> Tuple[tensor, tensor]:
         return (
-            zeros(size=(self.num_layers, batch_size, self.hidden_units)),
-            zeros(size=(self.num_layers, batch_size, self.hidden_units))
+            zeros(size=(self.num_layers, batch_size, self.hidden_units), device=device),
+            zeros(size=(self.num_layers, batch_size, self.hidden_units), device=device)
         )
     
     def fit(
         self, 
         train_data_iterator: LanguageModelingDataset, 
-        eval_data_iterator: LanguageModelingDataset, 
-        epochs: int
+        eval_data_iterator: Union[LanguageModelingDataset, None] = None, 
+        epochs: int = 1
     ) -> None:
         """Fit the object
 
@@ -105,7 +105,7 @@ class LstmModel(Module):
         epochs : int
             Number of epochs to train the model for
         """
-        self.train()
+        self.to(device)
         self.zero_grad()
 
         logger.info(
@@ -118,6 +118,7 @@ class LstmModel(Module):
         
         for epoch in range(epochs):
             tmp_loss = 0
+            self.train()
             for iteration in tqdm(range(0, len(train_data_iterator), train_data_iterator.bptt), desc="Training..."):
                 batch = train_data_iterator.get_batches(iteration)
                 batch = tuple(t.to(device) for t in batch)
@@ -138,10 +139,12 @@ class LstmModel(Module):
                     epoch, tmp_loss / train_data_iterator.total_number_of_batches
                 )
             )
-
-            self._evaluate(eval_data_iterator)
+            
+            if eval_data_iterator is not None:
+                self._evaluate(eval_data_iterator)
     
     def _evaluate(self, data_iterator: LanguageModelingDataset) -> None:
+        self.to(device)
         self.eval()
 
         logger.info(
