@@ -1,9 +1,12 @@
 from typing import Tuple
 import pytest
 from torch import randint, tensor, zeros
+from torch.cuda import is_available
 
 from language_model.model import LstmModel
 from language_model.preprocessing import LanguageModelingDataset, get_bpe_tokenizer
+
+device = "cuda" if is_available() else "cpu"
 
 BATCH_SIZE = 15
 BPTT = 4
@@ -39,7 +42,7 @@ def mock_data(
     bptt: int = BPTT,
     vocabulary_size: int = VOCABULARY_SIZE,
 ) -> tensor:
-    return randint(0, vocabulary_size, size=(batch_size, bptt))
+    return randint(0, vocabulary_size, size=(batch_size, bptt), device=device)
 
 @pytest.fixture
 def data_iterators(
@@ -70,6 +73,7 @@ def test_init_memory(model: LstmModel, batch_size: int = BATCH_SIZE) -> None:
     assert hidden_states[1].shape == (NUM_LAYERS, BATCH_SIZE, HIDDEN_UNITS), "Bad shape return for init hidden :("
 
 def test_forward_pass(model: LstmModel, mock_data: tensor, batch_size: int = BATCH_SIZE, ) -> None:
+    model.to(device)
     hiddens = model.init_hidden(batch_size)
     logits, _ = model((mock_data, hiddens))
     assert logits.shape == (BATCH_SIZE, BPTT, VOCABULARY_SIZE)
