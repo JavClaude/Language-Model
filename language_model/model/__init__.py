@@ -1,0 +1,1 @@
+from language_model.model.model import LstmModel
