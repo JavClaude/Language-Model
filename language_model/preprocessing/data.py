@@ -77,7 +77,7 @@ class LanguageModelingDataset(object):
             [path_to_data]
         )
 
-    def get_batches(self, index) -> Tuple[tensor, tensor]:
+    def get_batches(self, index: int) -> Tuple[tensor, tensor]:
         return (
             tensor(self.tokenized_sequences[:, index: index + self.bptt], dtype=long),
             tensor(self.target_tokenizer_sequences[:, index: index + self.bptt], dtype=long)
