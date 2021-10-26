@@ -46,7 +46,7 @@ class LstmModel(Module):
 
         self.criterion = CrossEntropyLoss()
 
-        self._parameters = {
+        self.hp_parameters = {
             "vocabulary_size": vocabulary_size,
             "embedding_dimension": embedding_dimension,
             "hidden_units": hidden_units,
@@ -65,16 +65,6 @@ class LstmModel(Module):
         )
         self.second_normalization_layer = LayerNorm(hidden_units)
         self.decoder_layer = Linear(hidden_units, vocabulary_size)
-
-        # writer.add_hparams(
-        #     hparam_dict={
-        #         "embedding_dimension": embedding_dimension,
-        #         "hidden_units": hidden_units,
-        #         "num_layers": num_layers,
-        #         "dropout_rnn": dropout_rnn
-                
-        #     }
-        # )
     
     def forward(self, inputs: Tuple[tensor, tensor]) -> Tuple[tensor, tensor]:
         """Forward pass of the LstmModel
@@ -102,8 +92,8 @@ class LstmModel(Module):
     
     def init_hidden(self, batch_size: int) -> Tuple[tensor, tensor]:
         return (
-            zeros(size=(self._parameters["num_layers"], batch_size, self._parameters["hidden_units"]), device=device),
-            zeros(size=(self._parameters["num_layers"], batch_size, self._parameters["hidden_units"]), device=device)
+            zeros(size=(self.hp_parameters["num_layers"], batch_size, self.hp_parameters["hidden_units"]), device=device),
+            zeros(size=(self.hp_parameters["num_layers"], batch_size, self.hp_parameters["hidden_units"]), device=device)
         )
     
     def fit(
@@ -178,7 +168,7 @@ class LstmModel(Module):
 
             if eval_data_iterator is not None:
                 writer.add_hparams(
-                    self._parameters,
+                    self.hp_parameters,
                     {
                         "train loss": mean_epoch_loss,
                         "eval loss": mean_epoch_eval_loss
@@ -186,7 +176,7 @@ class LstmModel(Module):
                 )
             else:
                 writer.add_hparams(
-                    self._parameters,
+                    self.hp_parameters,
                     {
                         "train loss": mean_epoch_loss
                     }
