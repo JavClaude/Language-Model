@@ -72,7 +72,7 @@ def test_init_memory(model: LstmModel, batch_size: int = BATCH_SIZE) -> None:
     hidden_states = model.init_hidden(batch_size)
     assert hidden_states[1].shape == (NUM_LAYERS, BATCH_SIZE, HIDDEN_UNITS), "Bad shape return for init hidden :("
 
-def test_forward_pass(model: LstmModel, mock_data: tensor, batch_size: int = BATCH_SIZE, ) -> None:
+def test_forward_pass(model: LstmModel, mock_data: tensor, batch_size: int = BATCH_SIZE) -> None:
     model.to(device)
     hiddens = model.init_hidden(batch_size)
     logits, _ = model((mock_data, hiddens))
