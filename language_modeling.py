@@ -1,14 +1,20 @@
 import argparse
-import pickle
+from typing import Any
 
+import numpy as np
+from torch import save, manual_seed
 from torch.cuda import is_available
 
 from language_model.model import LstmModel
-from language_model.preprocessing import LanguageModelingDataset, get_bpe_tokenizer
+from language_model.model.model import writer
+from language_model.preprocessing import get_bpe_tokenizer, LanguageModelingDataset
 
 device = "cuda" if is_available else "cpu"
 
-def train(args):
+np.random.seed(32)
+manual_seed(32)
+
+def train(args: Any) -> None:
     tokenizer = get_bpe_tokenizer()
     model = LstmModel(**vars(args))
 
@@ -25,6 +31,11 @@ def train(args):
         )
     else:
         model.fit(train_data_iterator, args.n_epochs)
+
+    path_to_save_artifacts = writer.get_logdir()
+    tokenizer.save(path_to_save_artifacts + "/tokenizer.json")
+    model.to("cpu")
+    save(model, path_to_save_artifacts + "/model.pt")
 
 def predict(args):
     print("predict")
