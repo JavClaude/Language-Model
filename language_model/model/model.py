@@ -183,7 +183,6 @@ class LstmModel(Module):
                 )
 
     def _evaluate(self, data_iterator: LanguageModelingDataset) -> float:
-        self.to(device)
         self.eval()
 
         logger.info(
