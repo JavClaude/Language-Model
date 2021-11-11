@@ -1,6 +1,7 @@
 import argparse
-from typing import Any
 import random
+from typing import Any
+
 
 import numpy as np
 from tokenizers import Tokenizer
