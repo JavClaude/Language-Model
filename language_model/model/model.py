@@ -3,8 +3,8 @@ from typing import Tuple, Union
 
 from torch import tensor, zeros
 from torch.cuda import is_available
-from torch.nn import CrossEntropyLoss, Embedding, LayerNorm, Linear, LSTM, Module
-from torch.optim import Adam
+from torch.nn import CrossEntropyLoss, Dropout, Embedding, LayerNorm, Linear, LSTM, Module
+from torch.optim import Adam, SGD
 from torch.utils.tensorboard.writer import SummaryWriter
 
 from tqdm import tqdm
@@ -65,6 +65,7 @@ class LstmModel(Module):
         )
         self.second_normalization_layer = LayerNorm(hidden_units)
         self.decoder_layer = Linear(hidden_units, vocabulary_size)
+        self.dropout = Dropout(0.3)
     
     def forward(self, inputs: Tuple[tensor, tensor]) -> Tuple[tensor, tensor]:
         """Forward pass of the LstmModel
@@ -87,6 +88,7 @@ class LstmModel(Module):
         x, hidden_states = self.encoder_layer(x, inputs[1])
         x = self.second_normalization_layer(x)
         x = self.decoder_layer(x)
+        x = self.dropout(x)
 
         return x, hidden_states
     
@@ -100,8 +102,10 @@ class LstmModel(Module):
         self, 
         train_data_iterator: LanguageModelingDataset, 
         eval_data_iterator: Union[LanguageModelingDataset, None] = None, 
-        epochs: int = 3
-    ) -> None:
+        epochs: int = 3,
+        lr: float = 0.00001,
+        optimizer_name: str = "Adam"
+   ) -> None:
         """Fit the object
 
         Parameters
@@ -112,6 +116,8 @@ class LstmModel(Module):
             Object fitted on data test
         epochs : int
             Number of epochs to train the model for
+        lr : float
+            Learning rate to use for gradient descent
         """
         self.to(device)
         self.zero_grad()
@@ -120,7 +126,25 @@ class LstmModel(Module):
             "Fitting model on {} samples".format(len(train_data_iterator))
         )
 
-        self.optimizer = Adam(self.parameters())
+        self.hp_parameters.update(
+            {
+                "batch_size": train_data_iterator.batch_size,
+                "bptt": train_data_iterator.bptt,
+                "lr": lr,
+                "optimizer": optimizer_name
+            }
+        )
+
+        if optimizer_name == "Adam":
+            self.optimizer = Adam(
+                self.parameters(),
+                lr
+            )
+        else:
+            self.optimizer = SGD(
+                self.parameters(),
+                lr
+            )
 
         hidden_states = self.init_hidden(train_data_iterator.batch_size)
         
@@ -129,8 +153,9 @@ class LstmModel(Module):
                 "You must provide a positive number of epochs"
             )
         else:
+            iteration = 0
+            eval_iteration = 0
             for epoch in range(epochs):
-                iteration = 0 
                 tmp_loss = 0
                 self.train()
                 for batch_index in tqdm(range(0, len(train_data_iterator), train_data_iterator.bptt), desc="Training..."):
@@ -164,7 +189,7 @@ class LstmModel(Module):
                 )
 
                 if eval_data_iterator is not None:
-                    mean_epoch_eval_loss = self._evaluate(eval_data_iterator)
+                    mean_epoch_eval_loss, eval_iteration = self._evaluate(eval_data_iterator, eval_iteration)
 
             if eval_data_iterator is not None:
                 writer.add_hparams(
@@ -182,7 +207,7 @@ class LstmModel(Module):
                     }
                 )
 
-    def _evaluate(self, data_iterator: LanguageModelingDataset) -> float:
+    def _evaluate(self, data_iterator: LanguageModelingDataset, iteration: int) -> Tuple[float, int]:
         self.eval()
 
         logger.info(
@@ -219,4 +244,4 @@ class LstmModel(Module):
             )
         )
 
-        return mean_epoch_loss
+        return mean_epoch_loss, iteration
