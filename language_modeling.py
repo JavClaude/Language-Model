@@ -45,7 +45,7 @@ def train(args: Any) -> None:
     model.to("cpu")
     save(model, path_to_save_artifacts + "/model.pt")
 
-def predict(args):
+def predict(args: Any) -> None:
     sequence_seed = args.sequence_seed
     model = load(args.model_weights, map_location=torch.device(device))
     softmax_function = Softmax(0)
