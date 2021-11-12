@@ -52,7 +52,7 @@ class LstmModel(Module):
             "hidden_units": hidden_units,
             "num_layers": num_layers,
             "dropout_rnn": dropout_rnn
-        }
+        }       
 
         self.embedding_layer = Embedding(vocabulary_size, embedding_dimension) # Put someting for padding index
         self.first_norrmalization_layer = LayerNorm(embedding_dimension)
@@ -216,7 +216,6 @@ class LstmModel(Module):
 
         hidden_states = self.init_hidden(data_iterator.batch_size)
         
-        iteration = 0
         tmp_loss = 0
         for batch_index in tqdm(range(0, len(data_iterator), data_iterator.bptt), desc="Evaluate..."):
             batch = data_iterator.get_batches(batch_index)
