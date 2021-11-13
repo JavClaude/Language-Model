@@ -35,10 +35,17 @@ def train(args: Any) -> None:
         model.fit(
             train_data_iterator,
             eval_data_iterator,
-            args.n_epochs
+            args.n_epochs,
+            lr=args.lr,
+            optimizer_name=args.optimizer_name
         )
     else:
-        model.fit(train_data_iterator, args.n_epochs)
+        model.fit(
+            train_data_iterator, 
+            args.n_epochs,
+            lr=args.lr,
+            optimizer_name=args.optimizer_name
+        )
 
     path_to_save_artifacts = writer.get_logdir()
     tokenizer.save(path_to_save_artifacts + "/tokenizer.json")
@@ -51,6 +58,7 @@ def predict(args: Any) -> None:
     softmax_function = Softmax(0)
     tokenizer = Tokenizer.from_file(args.tokenizer)
 
+    model.eval()
     model.to(device)
 
     hidden_states = model.init_hidden(1)
