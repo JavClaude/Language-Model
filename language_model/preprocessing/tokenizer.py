@@ -1,8 +1,7 @@
 from tokenizers import Tokenizer
-from tokenizers.decoders import BPEDecoder
+from tokenizers import decoders
 from tokenizers.models import BPE
-from tokenizers import pre_tokenizers
-from tokenizers.processors import ByteLevel
+from tokenizers.pre_tokenizers import ByteLevel
 
 def get_bpe_tokenizer() -> Tokenizer:
     """Return an instance of Tokenizer
@@ -15,15 +14,10 @@ def get_bpe_tokenizer() -> Tokenizer:
         Instance of Tokenizer object
     """
     tokenizer = Tokenizer(
-        BPE(
-            continuing_subword_prefix="##",
-            unk_token="<UNK>",
-            end_of_word_suffix="</w>"
-        )
+        BPE()
     )
-    tokenizer.pre_tokenizer = pre_tokenizers.ByteLevel()
-    tokenizer.decoder = BPEDecoder()
-    tokenizer.post_processor = ByteLevel()
+    tokenizer.decoder = decoders.ByteLevel()
+    tokenizer.pre_tokenizer = ByteLevel()
     tokenizer.add_special_tokens(
         ["<SOS>", "<PAD>", "<EOS>"]
     )

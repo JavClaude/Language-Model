@@ -66,9 +66,7 @@ class LanguageModelingDataset(object):
 
     def _train_tokenizer(self, path_to_data: str, tokenizer: Tokenizer, vocabulary_size: int) -> None:
         trainer = BpeTrainer(
-            vocab_size=vocabulary_size,
-            continuing_subword_prefix="##",
-            end_of_word_suffix="</w>"
+            vocab_size=vocabulary_size
         )
 
         tokenizer.train(
