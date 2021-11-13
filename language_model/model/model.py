@@ -130,6 +130,7 @@ class LstmModel(Module):
             {
                 "batch_size": train_data_iterator.batch_size,
                 "bptt": train_data_iterator.bptt,
+                "epochs": epochs,
                 "lr": lr,
                 "optimizer": optimizer_name
             }
