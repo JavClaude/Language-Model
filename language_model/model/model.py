@@ -8,7 +8,6 @@ from torch.nn import CrossEntropyLoss, Dropout, Embedding, LayerNorm, Linear, LS
 from torch.optim import Adam, SGD
 from torch.utils.tensorboard.writer import SummaryWriter
 
-
 from language_model.preprocessing.data import LanguageModelingDataset
 
 device = "cuda" if is_available() else "cpu"
@@ -117,6 +116,8 @@ class LstmModel(Module):
             Number of epochs to train the model for
         lr : float
             Learning rate to use for gradient descent
+        optimize_name: str
+            optimizer name to use for gradient descent
         """
         self.writer = SummaryWriter()
 
