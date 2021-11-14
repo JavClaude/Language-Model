@@ -11,11 +11,11 @@ from torch.cuda import is_available
 from torch.nn import Softmax
 
 from language_model.model import LstmModel
-from language_model.model.model import writer
 from language_model.preprocessing import get_bpe_tokenizer, LanguageModelingDataset
 
 device = "cuda" if is_available else "cpu"
 
+random.seed(32)
 np.random.seed(32)
 manual_seed(32)
 
@@ -47,7 +47,7 @@ def train(args: Any) -> None:
             optimizer_name=args.optimizer_name
         )
 
-    path_to_save_artifacts = writer.get_logdir()
+    path_to_save_artifacts = model.writer.get_logdir()
     tokenizer.save(path_to_save_artifacts + "/tokenizer.json")
     model.to("cpu")
     save(model, path_to_save_artifacts + "/model.pt")
@@ -63,7 +63,7 @@ def predict(args: Any) -> None:
 
     hidden_states = model.init_hidden(1)
 
-    input_tokens = tokenizer.encode(sequence_seed).ids
+    input_tokens = tokenizer.encode("<SOS> " + sequence_seed).ids
 
     for _ in range(args.maximum_sequence_length):
         with no_grad():
@@ -89,7 +89,7 @@ def predict(args: Any) -> None:
             input_tokens.append(random_token)
 
     print(
-        tokenizer.decode(input_tokens)
+        tokenizer.decode(input_tokens, skip_special_tokens=True)
     )
 
 if __name__ == "__main__":

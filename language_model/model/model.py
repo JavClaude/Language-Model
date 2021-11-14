@@ -1,20 +1,19 @@
 import logging
 from typing import Tuple, Union
 
+from tqdm import tqdm
 from torch import tensor, zeros
 from torch.cuda import is_available
 from torch.nn import CrossEntropyLoss, Dropout, Embedding, LayerNorm, Linear, LSTM, Module
 from torch.optim import Adam, SGD
 from torch.utils.tensorboard.writer import SummaryWriter
 
-from tqdm import tqdm
 
 from language_model.preprocessing.data import LanguageModelingDataset
 
 device = "cuda" if is_available() else "cpu"
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.NOTSET)
-writer = SummaryWriter()
 
 
 class LstmModel(Module):
@@ -119,6 +118,8 @@ class LstmModel(Module):
         lr : float
             Learning rate to use for gradient descent
         """
+        self.writer = SummaryWriter()
+
         self.to(device)
         self.zero_grad()
 
@@ -172,7 +173,7 @@ class LstmModel(Module):
                     tmp_loss += loss.item()
                     iteration += 1
 
-                    writer.add_scalar(
+                    self.writer.add_scalar(
                         "Training loss", 
                         loss.item(),
                         iteration
@@ -193,7 +194,7 @@ class LstmModel(Module):
                     mean_epoch_eval_loss, eval_iteration = self._evaluate(eval_data_iterator, eval_iteration)
 
             if eval_data_iterator is not None:
-                writer.add_hparams(
+                self.writer.add_hparams(
                     self.hp_parameters,
                     {
                         "train loss": mean_epoch_loss,
@@ -201,7 +202,7 @@ class LstmModel(Module):
                     }
                 )
             else:
-                writer.add_hparams(
+                self.writer.add_hparams(
                     self.hp_parameters,
                     {
                         "train loss": mean_epoch_loss
@@ -230,7 +231,7 @@ class LstmModel(Module):
             tmp_loss += loss.item()
             iteration += 1
 
-            writer.add_scalar(
+            self.writer.add_scalar(
                 "Evaluating Loss",
                 loss.item(),
                 iteration
