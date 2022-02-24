@@ -1,0 +1,2 @@
+CUDA = "cuda"
+CPU = "cpu"
