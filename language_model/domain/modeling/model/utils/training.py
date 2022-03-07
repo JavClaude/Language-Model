@@ -56,7 +56,7 @@ class Trainer:
         ):
             hidden_states = self._train_on_batch(
                 model,
-                train_dataloader.get_batches(batch_index),
+                next(train_dataloader.get_batches(batch_index)),
                 hidden_states,
                 criterion,
                 optimizer,
@@ -78,7 +78,7 @@ class Trainer:
             ):
                 hidden_states = self._eval_on_batch(
                     model,
-                    eval_dataloader.get_batches(batch_index),
+                    next(eval_dataloader.get_batches(batch_index)),
                     hidden_states,
                     criterion,
                 )

@@ -94,7 +94,7 @@ def test_trainer_train_on_epoch_should_call_other_training_utils_methods(
     train_dataloader = MagicMock()
     train_dataloader.bptt = 10
     train_dataloader.__len__.return_value = 100
-    get_batches_return_value = 10
+    get_batches_return_value = yield 10
     train_dataloader.get_batches.return_value = get_batches_return_value
 
     criterion = "b"
@@ -129,7 +129,7 @@ def test_trainer_eval_on_epoch_should_call_other_eval_utils_methods(
     eval_dataloader = MagicMock()
     eval_dataloader.bptt = 10
     eval_dataloader.__len__.return_value = 100
-    get_batches_return_value = 10
+    get_batches_return_value = yield 10
     eval_dataloader.get_batches.return_value = get_batches_return_value
 
     criterion = "b"

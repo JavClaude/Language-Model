@@ -55,7 +55,7 @@ class LSTMModel(Module):
         vocabulary_size: int,
         embedding_dimension: int,
         hidden_units_for_lstm: int,
-        n_blocks_for_decoder: int,
+        n_decoder_blocks: int,
         num_layers: int = 2,
         **kwargs
     ) -> None:
@@ -72,7 +72,7 @@ class LSTMModel(Module):
             num_layers=num_layers,
         )
         self.decoder_block = DecoderBlock(
-            hidden_units_for_lstm, vocabulary_size, n_blocks_for_decoder
+            hidden_units_for_lstm, vocabulary_size, n_decoder_blocks
         )
 
     def forward(
