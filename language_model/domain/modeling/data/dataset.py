@@ -1,12 +1,10 @@
 from typing import List, Tuple, Union
 
 import numpy as np
-import torch
 from tqdm import tqdm
 from torch import tensor
 from tokenizers.implementations import ByteLevelBPETokenizer
 
-from language_model.domain.modeling import DEVICE
 from language_model.domain.modeling.data import (
     EOD_TOKEN,
     PAD_TOKEN,

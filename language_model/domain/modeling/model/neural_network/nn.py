@@ -1,7 +1,6 @@
 from typing import Tuple
 
 from torch import tensor, zeros
-from torch.cuda import is_available
 from torch.nn import Embedding, LayerNorm, Linear, LSTM, Module, ReLU, Sequential
 
 from language_model.domain.modeling import DEVICE
