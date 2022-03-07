@@ -12,9 +12,7 @@ from torch.nn import (
     Sequential
 )
 
-from language_model.domain.modeling import CUDA, CPU
-
-device = CUDA if is_available() else CPU
+from language_model.domain.modeling import DEVICE
 
 
 class EmbeddingBlock(Module):
@@ -92,6 +90,6 @@ class LSTMModel(Module):
 
     def init_hidden_states(self, batch_size: int) -> Tuple[tensor, tensor]:
         return (
-            zeros(self._num_lstm_layers, batch_size, self._hidden_units, device=device),
-            zeros(self._num_lstm_layers, batch_size, self._hidden_units, device=device)
+            zeros(self._num_lstm_layers, batch_size, self._hidden_units, device=DEVICE),
+            zeros(self._num_lstm_layers, batch_size, self._hidden_units, device=DEVICE)
         )
