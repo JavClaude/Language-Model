@@ -1,0 +1,50 @@
+from unittest.mock import patch
+
+from language_modeling.domain.modeling.utils.logger.tensorboard_logger import (
+    TensorboardLogger,
+)
+
+
+# TO DO path the summary writer object / __init__, for each run of a test a folder is created
+
+
+@patch(
+    "language_modeling.domain.modeling.utils.logger.tensorboard_logger.SummaryWriter.add_scalar"
+)
+def test_tensorboard_logger_log_loss_should_call_the_summary_writer_add_scalar_method_with_correct_parameters(
+    add_scalar_mock,
+):
+    # Given
+    tensorboard_logger = TensorboardLogger()
+    loss = 0.1
+    iteration = 1
+    tag_value = "unit test loss"
+
+    # When
+    tensorboard_logger.log_loss(loss, iteration, tag_value)
+
+    # Then
+    add_scalar_mock.assert_called_with(
+        scalar_value=loss, global_step=iteration, tag=tag_value
+    )
+
+
+@patch(
+    "language_modeling.domain.modeling.utils.logger.tensorboard_logger.SummaryWriter.add_scalar"
+)
+def test_tensorboard_logger_log_perplexity_should_call_the_summary_writer_add_scalar_method_with_correct_parameters(
+    add_scalar_mock,
+):
+    # Given
+    tensorboard_logger = TensorboardLogger()
+    perplexity = 0.1
+    iteration = 1
+    tag_value = "unit test perplexity"
+
+    # When
+    tensorboard_logger.log_perplexity(perplexity, iteration, tag_value)
+
+    # Then
+    add_scalar_mock.assert_called_with(
+        scalar_value=perplexity, global_step=iteration, tag=tag_value
+    )
