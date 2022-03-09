@@ -6,9 +6,12 @@ from torch.optim import Optimizer
 from torch.nn import CrossEntropyLoss
 from tqdm import tqdm
 
+from domain.modeling.model.utils import EVAL_DESCRIPTION_MESSAGE, TRAIN_DESCRIPTION_MESSAGE
 from language_model.domain.modeling import DEVICE
 from language_model.domain.modeling.data.dataloader import LanguageModelingDataLoader
 from language_model.domain.modeling.model.neural_network.nn import LSTMModel
+from language_model.domain.modeling.model.utils.logger.base import BaseLogger
+from language_model.domain.modeling.model.utils import TRAIN_LOSS_TAG, EVAL_LOSS_TAG
 
 
 class Trainer:
@@ -16,10 +19,14 @@ class Trainer:
         self.batch_size = batch_size
         self.train_iteration = self._init_iteration()
         self.eval_iteration = self._init_iteration()
+        self._logger = None
 
     @staticmethod
     def _init_iteration() -> int:
         return 0
+
+    def set_logger(self, logger: BaseLogger) -> None:
+        self._logger = logger
 
     def train(
         self,
@@ -52,7 +59,7 @@ class Trainer:
         hidden_states = model.init_hidden_states(self.batch_size)
         for batch_index in tqdm(
             range(0, len(train_dataloader), train_dataloader.bptt),
-            desc="training model...",
+            desc=TRAIN_DESCRIPTION_MESSAGE,
         ):
             hidden_states = self._train_on_batch(
                 model,
@@ -74,7 +81,7 @@ class Trainer:
             hidden_states = model.init_hidden_states(self.batch_size)
             for batch_index in tqdm(
                 range(0, len(eval_dataloader), eval_dataloader.bptt),
-                desc="evaluating model...",
+                desc=EVAL_DESCRIPTION_MESSAGE,
             ):
                 hidden_states = self._eval_on_batch(
                     model,
@@ -111,6 +118,8 @@ class Trainer:
         loss = self._compute_loss(criterion, predictions, sequences_of_ids[1])
         self._compute_gradients(loss)
         self._apply_gradient_descent(optimizer)
+        if self._logger:
+            self._logger.log_loss(loss, self.train_iteration, TRAIN_LOSS_TAG)
         self.train_iteration = self._increment_iteration(self.train_iteration)
         return hidden_states
 
@@ -126,6 +135,8 @@ class Trainer:
         )
         predictions = self._transpose_decoder_output_matrix(predictions)
         loss = self._compute_loss(criterion, predictions, sequence_of_ids[1])
+        if self._logger:
+            self._logger.log_loss(loss, self.eval_iteration, EVAL_LOSS_TAG)
         self.eval_iteration = self._increment_iteration(self.eval_iteration)
         return hidden_states
 

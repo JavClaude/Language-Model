@@ -8,6 +8,7 @@ from language_model.domain.modeling.data.dataset import LanguageModelingDataset
 from language_model.domain.modeling.data.dataloader import LanguageModelingDataLoader
 from language_model.domain.modeling.model.neural_network.nn import LSTMModel
 from language_model.domain.modeling.model.utils.training import Trainer
+from language_model.domain.modeling.model.utils.logger.tensorboard_logger import TensorboardLogger
 
 
 def main():
@@ -43,6 +44,7 @@ def main():
     )
 
     trainer = Trainer(arguments.batch_size)
+    trainer.set_logger(TensorboardLogger())
 
     if arguments.path_to_eval_data:
         eval_language_modeling_dataloader = LanguageModelingDataLoader(
