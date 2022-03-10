@@ -5,7 +5,9 @@ import torch
 from torch import tensor, Tensor
 from tokenizers.implementations import ByteLevelBPETokenizer
 
-from domain.modeling.utils.decoder import BATCH_SIZE_TO_GENERATE_HIDDEN_STATES
+from language_modeling.domain.modeling.utils.decoder import (
+    BATCH_SIZE_TO_GENERATE_HIDDEN_STATES,
+)
 from language_modeling.domain.modeling.utils.data import SOS_TOKEN
 from language_modeling.domain.modeling import DEVICE
 from language_modeling.domain.modeling.model.neural_network.nn import LSTMModel
