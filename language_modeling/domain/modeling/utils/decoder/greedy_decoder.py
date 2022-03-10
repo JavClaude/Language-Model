@@ -55,6 +55,7 @@ class GreedyDecoder(TrainerUtils):
     ) -> str:
         str_seed = self._add_sos_str_to_the_seed_str(str_seed)
         model_input = self._tokenize_text(str_seed)
+        model_input = self._wrap_list_of_ids_into_a_torch_tensor(model_input)
         hidden_states = self._model.init_hidden_states(
             BATCH_SIZE_TO_GENERATE_HIDDEN_STATES
         )
