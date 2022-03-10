@@ -8,7 +8,10 @@ from language_modeling.domain.modeling.utils.trainer import (
     TRAIN_LOSS_TAG,
     EVAL_LOSS_TAG,
 )
-from language_modeling.domain.modeling.utils.trainer.trainer import Trainer
+from language_modeling.domain.modeling.utils.trainer.trainer import (
+    TrainerUtils,
+    Trainer,
+)
 
 
 def test_trainer_init_iteration_should_return_zero():
@@ -76,18 +79,6 @@ def test_trainer_train_method_should_call_eval_on_epoch_n_times_when_n_epochs_is
     put_model_on_the_device_mock.assert_called()
     eval_on_epoch_mock.assert_called_with(model, eval_dataloader, criterion)
     assert eval_on_epoch_mock.call_count == n_epochs
-
-
-def test_trainer_put_model_on_the_device_should_call_the_to_method_with_correct_device():
-    # Given
-    trainer = Trainer(1)
-    lstm_model_mock = MagicMock()
-
-    # When
-    trainer._put_model_on_the_device(lstm_model_mock)
-
-    # Then
-    lstm_model_mock.to.assert_called_with(DEVICE)
 
 
 @patch(
@@ -352,7 +343,7 @@ def test_trainer_train_on_batch_should_call_other_training_utils_method_when_a_l
     trainer = Trainer(1)
     trainer.set_logger(TensorboardLogger())
 
-    model = "a"
+    model = MagicMock()
     hidden_states = "b"
     criterion = "c"
     optimizer = "d"
@@ -425,9 +416,21 @@ def test_trainer_eval_on_batch_should_call_other_training_utils_method_when_a_lo
     increment_iteration_mock.assert_called()
 
 
+def test_trainer_put_model_on_the_device_should_call_the_to_method_with_correct_device():
+    # Given
+    trainer = TrainerUtils()
+    lstm_model_mock = MagicMock()
+
+    # When
+    trainer._put_model_on_the_device(lstm_model_mock)
+
+    # Then
+    lstm_model_mock.to.assert_called_with(DEVICE)
+
+
 def test_trainer_get_model_output_should_call_the_model_forward_pass():
     # Given
-    trainer = Trainer(1)
+    trainer = TrainerUtils()
     model_mock = MagicMock()
     model_mock.return_value = [1, 2]
 
@@ -443,7 +446,7 @@ def test_trainer_get_model_output_should_call_the_model_forward_pass():
 
 def test_trainer_detach_hidden_states_should_call_the_detach_method_for_a_tuple_of_tensor():
     # Given
-    trainer = Trainer(1)
+    trainer = TrainerUtils()
     hidden_state_1 = MagicMock()
     hidden_state_2 = MagicMock()
     hidden_states = tuple((hidden_state_1, hidden_state_2))
@@ -458,7 +461,7 @@ def test_trainer_detach_hidden_states_should_call_the_detach_method_for_a_tuple_
 
 def test_trainer_transpose_decoder_output_matrix_should_call_the_transpose_method_with_correct_parameters():
     # Given
-    trainer = Trainer(1)
+    trainer = TrainerUtils()
     tensor_mock = MagicMock()
 
     # When
@@ -470,7 +473,7 @@ def test_trainer_transpose_decoder_output_matrix_should_call_the_transpose_metho
 
 def test_trainer_compute_loss_should_call_the_forward_method_of_the_loss_module():
     # Given
-    trainer = Trainer(1)
+    trainer = TrainerUtils()
     criterion_mock = MagicMock()
 
     # When
@@ -482,7 +485,7 @@ def test_trainer_compute_loss_should_call_the_forward_method_of_the_loss_module(
 
 def test_trainer_compute_gradients_should_call_the_backward_method_of_the_loss_tensor():
     # Given
-    trainer = Trainer(1)
+    trainer = TrainerUtils()
     loss_tensor_mock = MagicMock()
 
     # When
@@ -494,7 +497,7 @@ def test_trainer_compute_gradients_should_call_the_backward_method_of_the_loss_t
 
 def test_trainer_apply_gradient_descent_should_call_the_optimizer_step_method():
     # Given
-    trainer = Trainer(1)
+    trainer = TrainerUtils()
     optimizer_mock = MagicMock()
 
     # When
@@ -506,7 +509,7 @@ def test_trainer_apply_gradient_descent_should_call_the_optimizer_step_method():
 
 def test_trainer_put_tensors_on_the_should_call_the_to_method_with_correct_device():
     # Given
-    trainer = Trainer(1)
+    trainer = TrainerUtils()
     tensor_1 = MagicMock()
     tensor_2 = MagicMock()
     tensors = tuple((tensor_1, tensor_2))

@@ -22,7 +22,72 @@ from language_modeling.domain.modeling.utils.trainer import (
 )
 
 
-class Trainer:
+class TrainerUtils:
+    @staticmethod
+    def _squeeze_tensor(tensor_of_ids: tensor) -> tensor:
+        return tensor_of_ids.squeeze()
+
+    @staticmethod
+    def _put_model_on_the_device(model: LSTMModel) -> None:
+        model.to(DEVICE)
+
+    @staticmethod
+    def _clean_gradients(model: LSTMModel) -> None:
+        model.zero_grad()
+
+    @staticmethod
+    def _put_model_to_train_mode(model: LSTMModel) -> None:
+        model.train()
+
+    @staticmethod
+    def _put_model_to_eval_mode(model: LSTMModel) -> None:
+        model.eval()
+
+    @staticmethod
+    def _get_model_output(
+        model: LSTMModel, sequence_of_ids: tensor, hidden_states: Tuple[tensor, tensor]
+    ) -> Tuple[tensor, tensor]:
+        predictions, hidden_states = model(sequence_of_ids, hidden_states)
+        return predictions, hidden_states
+
+    @staticmethod
+    def _detach_hidden_states(
+        hidden_states: Tuple[tensor, tensor]
+    ) -> Tuple[tensor, tensor]:
+        return tuple(tensor.detach() for tensor in hidden_states)
+
+    @staticmethod
+    def _transpose_decoder_output_matrix(decoder_output_matrix: tensor) -> tensor:
+        return decoder_output_matrix.transpose(2, 1)
+
+    @staticmethod
+    def _compute_loss(
+        criterion: CrossEntropyLoss,
+        decoder_output_matrix: tensor,
+        target_sequence: tensor,
+    ) -> tensor:
+        return criterion(decoder_output_matrix, target_sequence)
+
+    @staticmethod
+    def _compute_gradients(loss: tensor) -> None:
+        loss.backward()
+
+    @staticmethod
+    def _apply_gradient_descent(optimizer: Optimizer) -> None:
+        optimizer.step()
+
+    @staticmethod
+    def _increment_iteration(iteration: int) -> int:
+        return iteration + 1
+
+    @staticmethod
+    def _put_tensors_on_the_device(
+        tensors: Tuple[tensor, tensor]
+    ) -> Tuple[tensor, tensor]:
+        return tuple(tensor.to(DEVICE) for tensor in tensors)
+
+
+class Trainer(TrainerUtils):
     def __init__(self, batch_size: int) -> None:
         self.batch_size = batch_size
         self.train_iteration = self._init_iteration()
@@ -50,10 +115,6 @@ class Trainer:
             self._train_on_epoch(model, train_dataloader, criterion, optimizer)
             if eval_dataloader:
                 self._eval_on_epoch(model, eval_dataloader, criterion)
-
-    @staticmethod
-    def _put_model_on_the_device(model: LSTMModel) -> None:
-        model.to(DEVICE)
 
     def _train_on_epoch(
         self,
@@ -98,18 +159,6 @@ class Trainer:
                     criterion,
                 )
 
-    @staticmethod
-    def _clean_gradients(model: LSTMModel) -> None:
-        model.zero_grad()
-
-    @staticmethod
-    def _put_model_to_train_mode(model: LSTMModel) -> None:
-        model.train()
-
-    @staticmethod
-    def _put_model_to_eval_mode(model: LSTMModel) -> None:
-        model.eval()
-
     def _train_on_batch(
         self,
         model: LSTMModel,
@@ -148,46 +197,3 @@ class Trainer:
             self._logger.log_loss(loss, self.eval_iteration, EVAL_LOSS_TAG)
         self.eval_iteration = self._increment_iteration(self.eval_iteration)
         return hidden_states
-
-    @staticmethod
-    def _get_model_output(
-        model: LSTMModel, sequence_of_ids: tensor, hidden_states: Tuple[tensor, tensor]
-    ) -> Tuple[tensor, tensor]:
-        predictions, hidden_states = model(sequence_of_ids, hidden_states)
-        return predictions, hidden_states
-
-    @staticmethod
-    def _detach_hidden_states(
-        hidden_states: Tuple[tensor, tensor]
-    ) -> Tuple[tensor, tensor]:
-        return tuple(tensor.detach() for tensor in hidden_states)
-
-    @staticmethod
-    def _transpose_decoder_output_matrix(decoder_output_matrix: tensor) -> tensor:
-        return decoder_output_matrix.transpose(2, 1)
-
-    @staticmethod
-    def _compute_loss(
-        criterion: CrossEntropyLoss,
-        decoder_output_matrix: tensor,
-        target_sequence: tensor,
-    ) -> tensor:
-        return criterion(decoder_output_matrix, target_sequence)
-
-    @staticmethod
-    def _compute_gradients(loss: tensor) -> None:
-        loss.backward()
-
-    @staticmethod
-    def _apply_gradient_descent(optimizer: Optimizer) -> None:
-        optimizer.step()
-
-    @staticmethod
-    def _increment_iteration(iteration: int) -> int:
-        return iteration + 1
-
-    @staticmethod
-    def _put_tensors_on_the_device(
-        tensors: Tuple[tensor, tensor]
-    ) -> Tuple[tensor, tensor]:
-        return tuple(tensor.to(DEVICE) for tensor in tensors)
