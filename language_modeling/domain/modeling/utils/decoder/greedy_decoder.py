@@ -76,5 +76,6 @@ class GreedyDecoder(TrainerUtils):
                     top_k_words_ids_list
                 )
                 ids_to_decode.append(model_input)
+                model_input = self._wrap_list_of_ids_into_a_torch_tensor([model_input])
 
         return self._tokenizer.decode(ids_to_decode, skip_special_tokens=True)
