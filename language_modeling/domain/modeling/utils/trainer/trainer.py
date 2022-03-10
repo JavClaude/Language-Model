@@ -126,6 +126,7 @@ class Trainer:
         loss = self._compute_loss(criterion, predictions, sequences_of_ids[1])
         self._compute_gradients(loss)
         self._apply_gradient_descent(optimizer)
+        self._clean_gradients(model)
         if self._logger:
             self._logger.log_loss(loss, self.train_iteration, TRAIN_LOSS_TAG)
         self.train_iteration = self._increment_iteration(self.train_iteration)

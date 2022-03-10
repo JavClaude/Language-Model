@@ -224,10 +224,14 @@ def test_trainer_put_model_to_train_mode_should_call_the_model_train_method():
     "language_modeling.domain.modeling.utils.trainer.trainer.Trainer._apply_gradient_descent"
 )
 @patch(
+    "language_modeling.domain.modeling.utils.trainer.trainer.Trainer._clean_gradients"
+)
+@patch(
     "language_modeling.domain.modeling.utils.trainer.trainer.Trainer._increment_iteration"
 )
 def test_trainer_train_on_batch_should_call_other_training_utils_method(
     increment_iteration_mock,
+    clean_gradients_mock,
     apply_gradient_descent_mock,
     compute_gradients_mock,
     compute_loss_mock,
@@ -238,7 +242,7 @@ def test_trainer_train_on_batch_should_call_other_training_utils_method(
     # Given
     trainer = Trainer(1)
 
-    model = "a"
+    model = MagicMock()
     hidden_states = "b"
     criterion = "c"
     optimizer = "d"
@@ -259,6 +263,7 @@ def test_trainer_train_on_batch_should_call_other_training_utils_method(
     compute_loss_mock.assert_called_with(criterion, 4, second_sequence_value)
     compute_gradients_mock.assert_called_with(5)
     apply_gradient_descent_mock.assert_called_with(optimizer)
+    clean_gradients_mock.assert_called_with(model)
     increment_iteration_mock.assert_called()
 
 
