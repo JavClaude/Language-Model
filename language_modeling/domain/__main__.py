@@ -88,9 +88,9 @@ def main():
             model,
             train_language_modeling_dataloader,
             CrossEntropyLoss(),
-            Adam(model.parameters()),
+            Adam(model.parameters(), arguments.lr),
             eval_language_modeling_dataloader,
-            2,
+            arguments.n_epochs,
         )
 
     else:
@@ -100,7 +100,7 @@ def main():
             CrossEntropyLoss(),
             Adam(model.parameters(), arguments.lr),
             None,
-            2,
+            arguments.n_epochs,
         )
 
     saver = Saver(arguments.path_to_save_preprocessor_and_model)
