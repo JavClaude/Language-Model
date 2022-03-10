@@ -23,7 +23,10 @@ def main():
         "--path_to_eval_data", type=str, required=False, default=None
     )
     argument_parser.add_argument(
-        "--path_to_save_preprocessor_and_model", type=str, required=False, default="."
+        "--path_to_save_preprocessor_and_model",
+        type=str,
+        required=False,
+        default="preprocessor_and_model.bin",
     )
     argument_parser.add_argument("--n_epochs", type=int, required=False, default=3)
     argument_parser.add_argument("--batch_size", type=int, required=False, default=32)
