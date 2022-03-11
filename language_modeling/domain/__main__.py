@@ -99,7 +99,7 @@ def main():
         )
 
     logger.log_params(vars(arguments), trainer.losses)
-    saver = Saver(logger.log_dir)
+    saver = Saver(logger.log_dir())
     saver.save_preprocessor_and_model(train_language_modeling_dataset, model)
 
 
