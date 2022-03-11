@@ -55,19 +55,18 @@ class GreedyDecoder(TrainerUtils):
     ) -> str:
         str_seed = self._add_sos_str_to_the_seed_str(str_seed)
         model_input = self._tokenize_text(str_seed)
+        ids_to_decode = model_input
         model_input = self._wrap_list_of_ids_into_a_torch_tensor(model_input)
         hidden_states = self._model.init_hidden_states(
             BATCH_SIZE_TO_GENERATE_HIDDEN_STATES
         )
-
-        ids_to_decode = [model_input]
-
         with torch.no_grad():
             for _ in range(maximum_sequence_length_to_generate):
                 model_predictions, hidden_states = self._get_model_output(
                     self._model, model_input, hidden_states
                 )
                 model_predictions = self._squeeze_tensor(model_predictions)
+                model_predictions = self._get_last_prediction_axis(model_predictions)
                 top_k_words_ids = self._get_top_k_word_ids(
                     model_predictions, top_number_of_words_to_keep
                 )
