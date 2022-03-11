@@ -8,7 +8,7 @@ install_build_package:
 
 building_package:
 	echo "*** Building train_language_modelling ***"
-	python -m build .
+	python3 -m build .
 
 install_package:
 	echo "*** Installing package ***"
