@@ -28,6 +28,12 @@ class TrainerUtils:
         return tensor_of_ids.squeeze()
 
     @staticmethod
+    def _get_last_prediction_axis(tensor_of_ids: tensor) -> tensor:
+        if tensor_of_ids.ndim == 2:
+            return tensor_of_ids[-1]
+        return tensor_of_ids
+
+    @staticmethod
     def _put_model_on_the_device(model: LSTMModel) -> None:
         model.to(DEVICE)
 
