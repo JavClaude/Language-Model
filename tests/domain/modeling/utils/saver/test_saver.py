@@ -4,11 +4,14 @@ from language_modeling.domain.modeling.utils.saver.saver import Saver
 
 
 @patch("language_modeling.domain.modeling.utils.saver.saver.pickle.dump")
+@patch("language_modeling.domain.modeling.utils.saver.saver.Saver._get_joined_path")
 def test_saver_save_preprocessor_and_model_should_call_the_pickle_dump_function_with_correct_arguments(
-    dump_mock,
+    get_joined_path, dump_mock
 ):
     # Given
-    saver = Saver("test")
+    test_log_dir = "test"
+    artifact_name = "preprocessor_and_model.bin"
+    saver = Saver(test_log_dir)
     dataset = "dataset"
     model = "model"
     tuple_of_dataset_and_model = tuple((dataset, model))
@@ -19,4 +22,5 @@ def test_saver_save_preprocessor_and_model_should_call_the_pickle_dump_function_
         saver.save_preprocessor_and_model(dataset, model)
 
     # Then
+    get_joined_path.assert_called_with(test_log_dir, artifact_name)
     dump_mock.assert_called_with(tuple_of_dataset_and_model, "b")

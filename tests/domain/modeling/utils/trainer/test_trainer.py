@@ -168,30 +168,6 @@ def test_trainer_eval_on_epoch_should_call_other_eval_utils_methods(
     assert eval_on_batch_mock.call_count == 10
 
 
-def test_trainer_clean_gradients_should_call_the_model_zero_grad_method():
-    # Given
-    trainer = Trainer(1)
-    model_mock = MagicMock()
-
-    # When
-    trainer._clean_gradients(model_mock)
-
-    # Then
-    model_mock.zero_grad.assert_called()
-
-
-def test_trainer_put_model_to_train_mode_should_call_the_model_train_method():
-    # Given
-    trainer = Trainer(1)
-    model_mock = MagicMock()
-
-    # When
-    trainer._put_model_to_train_mode(model_mock)
-
-    # Then
-    model_mock.train.assert_called()
-
-
 @patch(
     "language_modeling.domain.modeling.utils.trainer.trainer.Trainer._get_model_output",
     return_value=(1, 2),
@@ -204,9 +180,9 @@ def test_trainer_put_model_to_train_mode_should_call_the_model_train_method():
     "language_modeling.domain.modeling.utils.trainer.trainer.Trainer._transpose_decoder_output_matrix",
     return_value=4,
 )
+@patch("language_modeling.domain.modeling.utils.trainer.trainer.Trainer._compute_loss")
 @patch(
-    "language_modeling.domain.modeling.utils.trainer.trainer.Trainer._compute_loss",
-    return_value=5,
+    "language_modeling.domain.modeling.utils.trainer.trainer.Trainer._append_train_loss"
 )
 @patch(
     "language_modeling.domain.modeling.utils.trainer.trainer.Trainer._compute_gradients"
@@ -225,6 +201,7 @@ def test_trainer_train_on_batch_should_call_other_training_utils_method(
     clean_gradients_mock,
     apply_gradient_descent_mock,
     compute_gradients_mock,
+    append_train_loss_mock,
     compute_loss_mock,
     transpose_decoder_output_matrix_mock,
     detach_hidden_states_mock,
@@ -242,6 +219,9 @@ def test_trainer_train_on_batch_should_call_other_training_utils_method(
     second_sequence_value = 7
     sequence_of_ids = [first_sequence_value, second_sequence_value]
 
+    mock_for_compute_loss_return = MagicMock()
+    compute_loss_mock.return_value = mock_for_compute_loss_return
+
     # When
     _ = trainer._train_on_batch(
         model, sequence_of_ids, hidden_states, criterion, optimizer
@@ -252,7 +232,8 @@ def test_trainer_train_on_batch_should_call_other_training_utils_method(
     detach_hidden_states_mock.assert_called_with(2)
     transpose_decoder_output_matrix_mock.assert_called_with(1)
     compute_loss_mock.assert_called_with(criterion, 4, second_sequence_value)
-    compute_gradients_mock.assert_called_with(5)
+    append_train_loss_mock.assert_called()
+    compute_gradients_mock.assert_called_with(mock_for_compute_loss_return)
     apply_gradient_descent_mock.assert_called_with(optimizer)
     clean_gradients_mock.assert_called_with(model)
     increment_iteration_mock.assert_called()
@@ -266,15 +247,16 @@ def test_trainer_train_on_batch_should_call_other_training_utils_method(
     "language_modeling.domain.modeling.utils.trainer.trainer.Trainer._transpose_decoder_output_matrix",
     return_value=3,
 )
+@patch("language_modeling.domain.modeling.utils.trainer.trainer.Trainer._compute_loss")
 @patch(
-    "language_modeling.domain.modeling.utils.trainer.trainer.Trainer._compute_loss",
-    return_value=4,
+    "language_modeling.domain.modeling.utils.trainer.trainer.Trainer._append_eval_loss"
 )
 @patch(
     "language_modeling.domain.modeling.utils.trainer.trainer.Trainer._increment_iteration"
 )
 def test_trainer_eval_on_batch_should_call_other_training_utils_method(
     increment_iteration_mock,
+    append_eval_loss_mock,
     compute_loss_mock,
     transpose_decoder_output_matrix_mock,
     get_model_output_mock,
@@ -290,6 +272,9 @@ def test_trainer_eval_on_batch_should_call_other_training_utils_method(
     second_sequence_value = 7
     sequence_of_ids = [first_sequence_value, second_sequence_value]
 
+    mock_for_compute_loss_return = MagicMock()
+    compute_loss_mock.return_value = mock_for_compute_loss_return
+
     # When
     _ = trainer._eval_on_batch(model, sequence_of_ids, hidden_states, criterion)
 
@@ -297,6 +282,7 @@ def test_trainer_eval_on_batch_should_call_other_training_utils_method(
     get_model_output_mock.assert_called_with(model, first_sequence_value, hidden_states)
     compute_loss_mock.assert_called_with(criterion, 3, second_sequence_value)
     transpose_decoder_output_matrix_mock.assert_called_with(1)
+    append_eval_loss_mock.assert_called_with(mock_for_compute_loss_return.item())
     increment_iteration_mock.assert_called()
 
 
@@ -312,9 +298,9 @@ def test_trainer_eval_on_batch_should_call_other_training_utils_method(
     "language_modeling.domain.modeling.utils.trainer.trainer.Trainer._transpose_decoder_output_matrix",
     return_value=4,
 )
+@patch("language_modeling.domain.modeling.utils.trainer.trainer.Trainer._compute_loss")
 @patch(
-    "language_modeling.domain.modeling.utils.trainer.trainer.Trainer._compute_loss",
-    return_value=5,
+    "language_modeling.domain.modeling.utils.trainer.trainer.Trainer._append_train_loss"
 )
 @patch(
     "language_modeling.domain.modeling.utils.trainer.trainer.Trainer._compute_gradients"
@@ -334,6 +320,7 @@ def test_trainer_train_on_batch_should_call_other_training_utils_method_when_a_l
     log_loss_mock,
     apply_gradient_descent_mock,
     compute_gradients_mock,
+    append_train_loss_mock,
     compute_loss_mock,
     transpose_decoder_output_matrix_mock,
     detach_hidden_states_mock,
@@ -352,6 +339,8 @@ def test_trainer_train_on_batch_should_call_other_training_utils_method_when_a_l
     second_sequence_value = 7
     sequence_of_ids = [first_sequence_value, second_sequence_value]
 
+    mock_for_compute_loss_return = MagicMock()
+    compute_loss_mock.return_value = mock_for_compute_loss_return
     # When
     _ = trainer._train_on_batch(
         model, sequence_of_ids, hidden_states, criterion, optimizer
@@ -362,9 +351,10 @@ def test_trainer_train_on_batch_should_call_other_training_utils_method_when_a_l
     detach_hidden_states_mock.assert_called_with(2)
     transpose_decoder_output_matrix_mock.assert_called_with(1)
     compute_loss_mock.assert_called_with(criterion, 4, second_sequence_value)
-    compute_gradients_mock.assert_called_with(5)
+    append_train_loss_mock.assert_called_with(mock_for_compute_loss_return.item())
+    compute_gradients_mock.assert_called_with(mock_for_compute_loss_return)
     apply_gradient_descent_mock.assert_called_with(optimizer)
-    log_loss_mock.assert_called_with(5, 0, TRAIN_LOSS_TAG)
+    log_loss_mock.assert_called_with(mock_for_compute_loss_return, 0, TRAIN_LOSS_TAG)
     increment_iteration_mock.assert_called()
 
 
@@ -376,9 +366,9 @@ def test_trainer_train_on_batch_should_call_other_training_utils_method_when_a_l
     "language_modeling.domain.modeling.utils.trainer.trainer.Trainer._transpose_decoder_output_matrix",
     return_value=3,
 )
+@patch("language_modeling.domain.modeling.utils.trainer.trainer.Trainer._compute_loss")
 @patch(
-    "language_modeling.domain.modeling.utils.trainer.trainer.Trainer._compute_loss",
-    return_value=4,
+    "language_modeling.domain.modeling.utils.trainer.trainer.Trainer._append_eval_loss"
 )
 @patch(
     "language_modeling.domain.modeling.utils.logger.tensorboard_logger.TensorboardLogger.log_loss"
@@ -389,6 +379,7 @@ def test_trainer_train_on_batch_should_call_other_training_utils_method_when_a_l
 def test_trainer_eval_on_batch_should_call_other_training_utils_method_when_a_logger_is_setup(
     increment_iteration_mock,
     log_loss_mock,
+    append_eval_loss_mock,
     compute_loss_mock,
     transpose_decoder_output_matrix_mock,
     get_model_output_mock,
@@ -405,18 +396,22 @@ def test_trainer_eval_on_batch_should_call_other_training_utils_method_when_a_lo
     second_sequence_value = 7
     sequence_of_ids = [first_sequence_value, second_sequence_value]
 
+    mock_for_compute_loss_return = MagicMock()
+    compute_loss_mock.return_value = mock_for_compute_loss_return
+
     # When
     _ = trainer._eval_on_batch(model, sequence_of_ids, hidden_states, criterion)
 
     # Then
     get_model_output_mock.assert_called_with(model, first_sequence_value, hidden_states)
-    compute_loss_mock.assert_called_with(criterion, 3, second_sequence_value)
     transpose_decoder_output_matrix_mock.assert_called_with(1)
-    log_loss_mock.assert_called_with(4, 0, EVAL_LOSS_TAG)
+    compute_loss_mock.assert_called_with(criterion, 3, second_sequence_value)
+    append_eval_loss_mock.assert_called_with(mock_for_compute_loss_return.item())
+    log_loss_mock.assert_called_with(mock_for_compute_loss_return, 0, EVAL_LOSS_TAG)
     increment_iteration_mock.assert_called()
 
 
-def test_trainer_put_model_on_the_device_should_call_the_to_method_with_correct_device():
+def test_trainer_utils_put_model_on_the_device_should_call_the_to_method_with_correct_device():
     # Given
     trainer = TrainerUtils()
     lstm_model_mock = MagicMock()
@@ -428,7 +423,7 @@ def test_trainer_put_model_on_the_device_should_call_the_to_method_with_correct_
     lstm_model_mock.to.assert_called_with(DEVICE)
 
 
-def test_trainer_get_model_output_should_call_the_model_forward_pass():
+def test_trainer_utils_get_model_output_should_call_the_model_forward_pass():
     # Given
     trainer = TrainerUtils()
     model_mock = MagicMock()
@@ -444,7 +439,7 @@ def test_trainer_get_model_output_should_call_the_model_forward_pass():
     model_mock.assert_called_with(sequence_of_ids, hidden_states)
 
 
-def test_trainer_detach_hidden_states_should_call_the_detach_method_for_a_tuple_of_tensor():
+def test_trainer_utils_detach_hidden_states_should_call_the_detach_method_for_a_tuple_of_tensor():
     # Given
     trainer = TrainerUtils()
     hidden_state_1 = MagicMock()
@@ -459,7 +454,7 @@ def test_trainer_detach_hidden_states_should_call_the_detach_method_for_a_tuple_
     hidden_state_2.detach.assert_called()
 
 
-def test_trainer_transpose_decoder_output_matrix_should_call_the_transpose_method_with_correct_parameters():
+def test_trainer_utils_transpose_decoder_output_matrix_should_call_the_transpose_method_with_correct_parameters():
     # Given
     trainer = TrainerUtils()
     tensor_mock = MagicMock()
@@ -471,7 +466,7 @@ def test_trainer_transpose_decoder_output_matrix_should_call_the_transpose_metho
     tensor_mock.transpose.assert_called_once_with(2, 1)
 
 
-def test_trainer_compute_loss_should_call_the_forward_method_of_the_loss_module():
+def test_trainer_utils_compute_loss_should_call_the_forward_method_of_the_loss_module():
     # Given
     trainer = TrainerUtils()
     criterion_mock = MagicMock()
@@ -483,7 +478,7 @@ def test_trainer_compute_loss_should_call_the_forward_method_of_the_loss_module(
     criterion_mock.assert_called_with("a", "b")
 
 
-def test_trainer_compute_gradients_should_call_the_backward_method_of_the_loss_tensor():
+def test_trainer_utils_compute_gradients_should_call_the_backward_method_of_the_loss_tensor():
     # Given
     trainer = TrainerUtils()
     loss_tensor_mock = MagicMock()
@@ -495,7 +490,7 @@ def test_trainer_compute_gradients_should_call_the_backward_method_of_the_loss_t
     loss_tensor_mock.backward.assert_called()
 
 
-def test_trainer_apply_gradient_descent_should_call_the_optimizer_step_method():
+def test_trainer_utils_apply_gradient_descent_should_call_the_optimizer_step_method():
     # Given
     trainer = TrainerUtils()
     optimizer_mock = MagicMock()
@@ -507,7 +502,7 @@ def test_trainer_apply_gradient_descent_should_call_the_optimizer_step_method():
     optimizer_mock.step.assert_called()
 
 
-def test_trainer_put_tensors_on_the_should_call_the_to_method_with_correct_device():
+def test_trainer_utils_put_tensors_on_the_should_call_the_to_method_with_correct_device():
     # Given
     trainer = TrainerUtils()
     tensor_1 = MagicMock()
@@ -520,3 +515,27 @@ def test_trainer_put_tensors_on_the_should_call_the_to_method_with_correct_devic
     # Then
     tensor_1.to.assert_called_with(DEVICE)
     tensor_2.to.assert_called_with(DEVICE)
+
+
+def test_trainer_utils_clean_gradients_should_call_the_model_zero_grad_method():
+    # Given
+    trainer = TrainerUtils()
+    model_mock = MagicMock()
+
+    # When
+    trainer._clean_gradients(model_mock)
+
+    # Then
+    model_mock.zero_grad.assert_called()
+
+
+def test_trainer_utils_put_model_to_train_mode_should_call_the_model_train_method():
+    # Given
+    trainer = TrainerUtils()
+    model_mock = MagicMock()
+
+    # When
+    trainer._put_model_to_train_mode(model_mock)
+
+    # Then
+    model_mock.train.assert_called()

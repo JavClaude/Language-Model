@@ -48,3 +48,23 @@ def test_tensorboard_logger_log_perplexity_should_call_the_summary_writer_add_sc
     add_scalar_mock.assert_called_with(
         scalar_value=perplexity, global_step=iteration, tag=tag_value
     )
+
+
+@patch(
+    "language_modeling.domain.modeling.utils.logger.tensorboard_logger.SummaryWriter.add_hparams"
+)
+def test_tensorboard_logger_log_params_should_call_the_summary_writer_add_hparams_method_with_correct_parameters(
+    add_hparams_mock,
+):
+    # Given
+    tensorboard_logger = TensorboardLogger()
+    hparam_dict = {"a": 1, "b": 2}
+    metric_dict = {"c": 1, "d": 2}
+
+    # When
+    tensorboard_logger.log_params(hparam_dict, metric_dict)
+
+    # Then
+    add_hparams_mock.assert_called_with(
+        hparam_dict=hparam_dict, metric_dict=metric_dict
+    )

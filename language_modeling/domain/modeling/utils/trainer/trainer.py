@@ -1,4 +1,4 @@
-from typing import Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 import torch
 from torch import tensor
@@ -75,6 +75,10 @@ class TrainerUtils:
         return criterion(decoder_output_matrix, target_sequence)
 
     @staticmethod
+    def _compute_mean_loss(loss: List[float]) -> float:
+        return sum(loss) / len(loss)
+
+    @staticmethod
     def _compute_gradients(loss: tensor) -> None:
         loss.backward()
 
@@ -99,6 +103,22 @@ class Trainer(TrainerUtils):
         self.train_iteration = self._init_iteration()
         self.eval_iteration = self._init_iteration()
         self._logger = None
+
+        self._train_loss = []
+        self._eval_loss = []
+
+    @property
+    def losses(self) -> Dict[str, float]:
+        return {
+            TRAIN_LOSS_TAG: self._compute_mean_loss(self._train_loss),
+            EVAL_LOSS_TAG: self._compute_mean_loss(self._eval_loss),
+        }
+
+    def _append_train_loss(self, train_loss: float) -> None:
+        self._train_loss.append(train_loss)
+
+    def _append_eval_loss(self, eval_loss: float) -> None:
+        self._eval_loss.append(eval_loss)
 
     @staticmethod
     def _init_iteration() -> int:
@@ -179,6 +199,7 @@ class Trainer(TrainerUtils):
         hidden_states = self._detach_hidden_states(hidden_states)
         predictions = self._transpose_decoder_output_matrix(predictions)
         loss = self._compute_loss(criterion, predictions, sequences_of_ids[1])
+        self._append_train_loss(loss.item())
         self._compute_gradients(loss)
         self._apply_gradient_descent(optimizer)
         self._clean_gradients(model)
@@ -199,6 +220,7 @@ class Trainer(TrainerUtils):
         )
         predictions = self._transpose_decoder_output_matrix(predictions)
         loss = self._compute_loss(criterion, predictions, sequence_of_ids[1])
+        self._append_eval_loss(loss.item())
         if self._logger:
             self._logger.log_loss(loss, self.eval_iteration, EVAL_LOSS_TAG)
         self.eval_iteration = self._increment_iteration(self.eval_iteration)

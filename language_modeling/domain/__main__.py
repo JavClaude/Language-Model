@@ -22,12 +22,6 @@ def main():
     argument_parser.add_argument(
         "--path_to_eval_data", type=str, required=False, default=None
     )
-    argument_parser.add_argument(
-        "--path_to_save_preprocessor_and_model",
-        type=str,
-        required=False,
-        default="preprocessor_and_model.bin",
-    )
     argument_parser.add_argument("--n_epochs", type=int, required=False, default=3)
     argument_parser.add_argument("--batch_size", type=int, required=False, default=32)
     argument_parser.add_argument("--bptt", type=int, required=False, default=64)
@@ -73,8 +67,9 @@ def main():
         arguments.num_of_lstm_layer,
     )
 
+    logger = TensorboardLogger()
     trainer = Trainer(arguments.batch_size)
-    trainer.set_logger(TensorboardLogger())
+    trainer.set_logger(logger)
 
     if arguments.path_to_eval_data:
         eval_language_modeling_dataloader = LanguageModelingDataLoader(
@@ -103,7 +98,8 @@ def main():
             arguments.n_epochs,
         )
 
-    saver = Saver(arguments.path_to_save_preprocessor_and_model)
+    logger.log_params(vars(arguments), trainer.losses)
+    saver = Saver(logger.log_dir)
     saver.save_preprocessor_and_model(train_language_modeling_dataset, model)
 
 
