@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, patch
 
-from language_modeling.domain.modeling import DEVICE
+from language_modeling.domain.modeling import CPU, DEVICE
 from language_modeling.domain.modeling.utils.logger.tensorboard_logger import (
     TensorboardLogger,
 )
@@ -44,10 +44,11 @@ def test_trainer_train_method_should_call_train_on_epoch_n_times_when_n_epochs_i
     trainer.train(model, train_dataloader, criterion, optimizer, None, n_epochs)
 
     # Then
-    put_model_on_the_device_mock.assert_called()
     train_on_epoch_mock.assert_called_with(
         model, train_dataloader, criterion, optimizer
     )
+    put_model_on_the_device_mock.assert_called_with(model, CPU)
+    assert put_model_on_the_device_mock.call_count == 2
     assert train_on_epoch_mock.call_count == n_epochs
 
 

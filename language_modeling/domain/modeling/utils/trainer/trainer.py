@@ -10,7 +10,7 @@ from language_modeling.domain.modeling.utils.trainer import (
     EVAL_DESCRIPTION_MESSAGE,
     TRAIN_DESCRIPTION_MESSAGE,
 )
-from language_modeling.domain.modeling import DEVICE
+from language_modeling.domain.modeling import CPU, DEVICE
 from language_modeling.domain.modeling.utils.data.dataloader import (
     LanguageModelingDataLoader,
 )
@@ -34,8 +34,8 @@ class TrainerUtils:
         return tensor_of_ids
 
     @staticmethod
-    def _put_model_on_the_device(model: LSTMModel) -> None:
-        model.to(DEVICE)
+    def _put_model_on_the_device(model: LSTMModel, device=DEVICE) -> None:
+        model.to(device)
 
     @staticmethod
     def _clean_gradients(model: LSTMModel) -> None:
@@ -141,6 +141,7 @@ class Trainer(TrainerUtils):
             self._train_on_epoch(model, train_dataloader, criterion, optimizer)
             if eval_dataloader:
                 self._eval_on_epoch(model, eval_dataloader, criterion)
+        self._put_model_on_the_device(model, CPU)
 
     def _train_on_epoch(
         self,
