@@ -24,7 +24,7 @@ class APIBuilder:
         return FastAPI()
 
     def _add_generate_text_root(self) -> None:
-        @self._api.post("v1/generate_text", response_model=TextOutput)
+        @self._api.post("/v1/generate_text", response_model=TextOutput)
         def generate_text(text_inputs: TextInput) -> TextOutput:
             generated_text = self._decoder.generate_text(
                 text_inputs.seed_str,
