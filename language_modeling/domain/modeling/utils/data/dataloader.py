@@ -52,12 +52,3 @@ class LanguageModelingDataLoader:
             device=DEVICE,
             dtype=long,
         )
-
-
-if __name__ == "__main__":
-    from domain.modeling.utils.data.dataset import LanguageModelingDataset
-
-    lmd = LanguageModelingDataset(32, 64)
-    lmd.fit("/Users/boyclaude/Desktop/Git/Language-Model/Data/LMFinance_full_train.txt")
-
-    loader = LanguageModelingDataLoader(64, None)
