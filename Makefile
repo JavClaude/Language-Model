@@ -17,7 +17,7 @@ quality-checks: install_package
 	pip3 install flake8==4.0.1 black==22.1.0
 
 	@echo "*** running quality checks ***"
-	flake8 language_modeling --config=.flake8 --ignore=E203
+	flake8 language_modeling --config=.flake8 --ignore=E203,E501,W605,E711
 	black language_modeling
 
 unit-tests: install_package

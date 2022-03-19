@@ -1,3 +1,7 @@
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/javclaude/language-model/language-modeling-ci-workflow)
+[![Python 3.7+](https://img.shields.io/badge/python-3.7|3.8|3.9-blue.svg)](https://www.python.org/downloads/release/python-370/)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/javclaude/language-model)
+
 # language-model
 
 A small package to train a sub word language model based on LSTM neural network
