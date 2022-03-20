@@ -9,7 +9,7 @@ from language_modeling.domain.scraper.pipelines import (
     SPACES_PATTERN_REGEX_TO_CATCH,
     EMPTY_STRING,
 )
-from language_modeling.domain.scraper.spiders.boursorama.base_data_model import BaseItem
+from language_modeling.domain.scraper.spiders.boursorama.data_model import BaseItem
 
 
 class CleanHtmlPipeline:

@@ -12,11 +12,9 @@ from language_modeling.domain.scraper.spiders.boursorama.economic_news import (
     BOURSORAMA_ECONOMIC_NEWS_SPIDER_SOURCE_NAME_XPATH,
     BOURSORAMA_ECONOMIC_NEWS_SPIDER_DATE_XPATH,
     BOURSORAMA_ECONOMIC_NEWS_SPIDER_NEWS_TITLE,
-    BOURSORAMA_ECONOMIC_NEWS_SPIDER_NEWS_CONTENT
+    BOURSORAMA_ECONOMIC_NEWS_SPIDER_NEWS_CONTENT,
 )
-from language_modeling.domain.scraper.spiders.boursorama.economic_news.data_model import (
-    BoursoramaEconomicNews,
-)
+from language_modeling.domain.scraper.spiders.boursorama.data_model import BoursoramaNews
 
 
 class BoursoramaEconomicNewsSpider(BaseBoursoramaSpider, Spider):
@@ -25,7 +23,7 @@ class BoursoramaEconomicNewsSpider(BaseBoursoramaSpider, Spider):
     last_page_url_xpath = BOURSORAMA_ECONOMIC_NEWS_SPIDER_LAST_URL_XPATH
     all_news_xpath = BOURSORAMA_ECONOMIC_NEWS_SPIDER_ALL_NEWS_XPATH
 
-    def _parse_news_content(self, response: Response) -> BoursoramaEconomicNews:
+    def _parse_news_content(self, response: Response) -> BoursoramaNews:
         yield BoursoramaEconomicNews(
             source_name=self._extract_data_from_response(
                 response,
@@ -42,5 +40,5 @@ class BoursoramaEconomicNewsSpider(BaseBoursoramaSpider, Spider):
             news_text=self._extract_data_from_response(
                 response,
                 BOURSORAMA_ECONOMIC_NEWS_SPIDER_NEWS_CONTENT,
-            )
+            ),
         )

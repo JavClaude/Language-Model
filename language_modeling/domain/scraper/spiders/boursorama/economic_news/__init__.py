@@ -1,4 +1,4 @@
-BOURSORAMA_ECONOMIC_NEWS_SPIDER_NAME = "boursorama_economic_news_spider"
+BOURSORAMA_ECONOMIC_NEWS_SPIDER_NAME = "boursorama-economic-news-spider"
 BOURSORAMA_ECONOMIC_NEWS_SPIDER_START_URL = (
     "https://www.boursorama.com/actualite-economique/"
 )
@@ -8,5 +8,9 @@ BOURSORAMA_ECONOMIC_NEWS_SPIDER_ALL_NEWS_XPATH = "//*[@id='main-content']/div/di
 
 BOURSORAMA_ECONOMIC_NEWS_SPIDER_SOURCE_NAME_XPATH = "//*[@id='main-content']/div/div/div[1]/div[1]/div[2]/div[1]/div[2]/h1/div/strong/text()"
 BOURSORAMA_ECONOMIC_NEWS_SPIDER_DATE_XPATH = "//*[@id='main-content']/div/div/div[1]/div[1]/div[2]/div[1]/div[2]/h1/div/span[3]/text()"
-BOURSORAMA_ECONOMIC_NEWS_SPIDER_NEWS_TITLE = "//*[@id='main-content']/div/div/div[1]/div[1]/div[2]/div[1]/div[2]/h1/text()"
-BOURSORAMA_ECONOMIC_NEWS_SPIDER_NEWS_CONTENT = "//*[@id='main-content']/div/div/div[1]/div[1]/div[2]/div[1]/div[2]/div[5]"
+BOURSORAMA_ECONOMIC_NEWS_SPIDER_NEWS_TITLE = (
+    "//*[@id='main-content']/div/div/div[1]/div[1]/div[2]/div[1]/div[2]/h1/text()"
+)
+BOURSORAMA_ECONOMIC_NEWS_SPIDER_NEWS_CONTENT = (
+    "//*[@id='main-content']/div/div/div[1]/div[1]/div[2]/div[1]/div[2]/div[5]"
+)
