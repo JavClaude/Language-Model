@@ -14,7 +14,9 @@ from language_modeling.domain.scraper.spiders.boursorama.financial_news import (
     BOURSORAMA_FINANCIAL_NEWS_SPIDER_NEWS_TITLE_XPATH,
     BOURSORAMA_FINANCIAL_NEWS_SPIDER_NEWS_CONTENT_XPATH,
 )
-from language_modeling.domain.scraper.spiders.boursorama.data_model import BoursoramaNews
+from language_modeling.domain.scraper.spiders.boursorama.data_model import (
+    BoursoramaNews,
+)
 
 
 class BoursoramaFinancialNewsSpider(BaseBoursoramaSpider, Spider):
