@@ -2,6 +2,7 @@ import argparse
 
 from tokenizers.implementations import ByteLevelBPETokenizer
 from torch.optim import Adam
+from torch.optim.lr_scheduler import CyclicLR
 from torch.nn import CrossEntropyLoss
 
 from language_modeling.domain.modeling.utils.data.dataset import LanguageModelingDataset
@@ -26,6 +27,11 @@ def main():
     argument_parser.add_argument("--batch_size", type=int, required=False, default=32)
     argument_parser.add_argument("--bptt", type=int, required=False, default=64)
     argument_parser.add_argument("--lr", type=float, required=False, default=0.0001)
+    argument_parser.add_argument("--base_lr", type=float, required=False)
+    argument_parser.add_argument("--max_lr", type=float, required=False)
+    argument_parser.add_argument("--cyclic_lr_mode", type=str, required=False, default="exp_range")
+    argument_parser.add_argument("--gamma", type=float, required=False, default=0.99995)
+    argument_parser.add_argument("--step_size_down", type=int, required=False, default=10000)
     argument_parser.add_argument(
         "--vocabulary_size", type=int, required=False, default=20000
     )
@@ -71,6 +77,21 @@ def main():
     trainer = Trainer(arguments.batch_size)
     trainer.set_logger(logger)
 
+    criterion = CrossEntropyLoss()
+    optimizer = Adam(model.parameters(), arguments.lr)
+    if arguments.base_lr:
+        lr_scheduler = CyclicLR(
+            optimizer,
+            base_lr=arguments.base_lr,
+            max_lr=arguments.max_lr,
+            step_size_down=arguments.step_size_down,
+            gamma=arguments.gamma,
+            mode=arguments.cyclic_lr_mode,
+            cycle_momentum=False
+        )
+    else:
+        lr_scheduler = None
+
     if arguments.path_to_eval_data:
         eval_language_modeling_dataloader = LanguageModelingDataLoader(
             arguments.bptt,
@@ -79,24 +100,12 @@ def main():
             ),
         )
 
-        trainer.train(
-            model,
-            train_language_modeling_dataloader,
-            CrossEntropyLoss(),
-            Adam(model.parameters(), arguments.lr),
-            eval_language_modeling_dataloader,
-            arguments.n_epochs,
-        )
+        trainer.train(model, train_language_modeling_dataloader, criterion, optimizer, lr_scheduler,
+                      eval_dataloader=eval_language_modeling_dataloader, n_epochs=arguments.n_epochs)
 
     else:
-        trainer.train(
-            model,
-            train_language_modeling_dataloader,
-            CrossEntropyLoss(),
-            Adam(model.parameters(), arguments.lr),
-            None,
-            arguments.n_epochs,
-        )
+        trainer.train(model, train_language_modeling_dataloader, criterion, optimizer, lr_scheduler, eval_dataloader=None,
+                      n_epochs=arguments.n_epochs)
 
     logger.log_params(vars(arguments), trainer.losses)
     saver = Saver(logger.log_dir())

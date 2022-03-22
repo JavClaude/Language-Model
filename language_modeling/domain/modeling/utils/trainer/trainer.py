@@ -3,6 +3,7 @@ from typing import Dict, List, Tuple, Union
 import torch
 from torch import tensor
 from torch.optim import Optimizer
+from torch.optim.lr_scheduler import CyclicLR
 from torch.nn import CrossEntropyLoss
 from tqdm import tqdm
 
@@ -17,6 +18,7 @@ from language_modeling.domain.modeling.utils.data.dataloader import (
 from language_modeling.domain.modeling.model.neural_network.nn import LSTMModel
 from language_modeling.domain.modeling.utils.logger.base import BaseLogger
 from language_modeling.domain.modeling.utils.trainer import (
+    LEARNING_RATE_TAG,
     TRAIN_LOSS_TAG,
     EVAL_LOSS_TAG,
 )
@@ -51,14 +53,14 @@ class TrainerUtils:
 
     @staticmethod
     def _get_model_output(
-        model: LSTMModel, sequence_of_ids: tensor, hidden_states: Tuple[tensor, tensor]
+            model: LSTMModel, sequence_of_ids: tensor, hidden_states: Tuple[tensor, tensor]
     ) -> Tuple[tensor, tensor]:
         predictions, hidden_states = model(sequence_of_ids, hidden_states)
         return predictions, hidden_states
 
     @staticmethod
     def _detach_hidden_states(
-        hidden_states: Tuple[tensor, tensor]
+            hidden_states: Tuple[tensor, tensor]
     ) -> Tuple[tensor, tensor]:
         return tuple(tensor.detach() for tensor in hidden_states)
 
@@ -68,9 +70,9 @@ class TrainerUtils:
 
     @staticmethod
     def _compute_loss(
-        criterion: CrossEntropyLoss,
-        decoder_output_matrix: tensor,
-        target_sequence: tensor,
+            criterion: CrossEntropyLoss,
+            decoder_output_matrix: tensor,
+            target_sequence: tensor,
     ) -> tensor:
         return criterion(decoder_output_matrix, target_sequence)
 
@@ -87,12 +89,16 @@ class TrainerUtils:
         optimizer.step()
 
     @staticmethod
+    def _apply_lr_scheduler(lr_scheduler: CyclicLR) -> None:
+        lr_scheduler.step()
+
+    @staticmethod
     def _increment_iteration(iteration: int) -> int:
         return iteration + 1
 
     @staticmethod
     def _put_tensors_on_the_device(
-        tensors: Tuple[tensor, tensor]
+            tensors: Tuple[tensor, tensor]
     ) -> Tuple[tensor, tensor]:
         return tuple(tensor.to(DEVICE) for tensor in tensors)
 
@@ -127,56 +133,40 @@ class Trainer(TrainerUtils):
     def set_logger(self, logger: BaseLogger) -> None:
         self._logger = logger
 
-    def train(
-        self,
-        model: LSTMModel,
-        train_dataloader: LanguageModelingDataLoader,
-        criterion: CrossEntropyLoss,
-        optimizer: Optimizer,
-        eval_dataloader: Union[LanguageModelingDataLoader, None] = None,
-        n_epochs: int = 3,
-    ) -> None:
+    def train(self, model: LSTMModel, train_dataloader: LanguageModelingDataLoader, criterion: CrossEntropyLoss, optimizer: Optimizer,
+              lr_scheduler: Union[CyclicLR, None] = None, eval_dataloader: Union[LanguageModelingDataLoader, None] = None, n_epochs: int = 3) -> None:
         self._put_model_on_the_device(model)
         for _ in range(n_epochs):
-            self._train_on_epoch(model, train_dataloader, criterion, optimizer)
+            self._train_on_epoch(model, train_dataloader, criterion, optimizer, lr_scheduler)
             if eval_dataloader:
                 self._eval_on_epoch(model, eval_dataloader, criterion)
 
-    def _train_on_epoch(
-        self,
-        model: LSTMModel,
-        train_dataloader: LanguageModelingDataLoader,
-        criterion: CrossEntropyLoss,
-        optimizer: Optimizer,
-    ) -> None:
+    def _train_on_epoch(self, model: LSTMModel, train_dataloader: LanguageModelingDataLoader, criterion: CrossEntropyLoss, optimizer: Optimizer,
+                        lr_scheduler: Union[CyclicLR, None] = None) -> None:
         self._clean_gradients(model)
         self._put_model_to_train_mode(model)
         hidden_states = model.init_hidden_states(self.batch_size)
         for batch_index in tqdm(
-            range(0, len(train_dataloader), train_dataloader.bptt),
-            desc=TRAIN_DESCRIPTION_MESSAGE,
+                range(0, len(train_dataloader), train_dataloader.bptt),
+                desc=TRAIN_DESCRIPTION_MESSAGE,
         ):
             hidden_states = self._train_on_batch(
-                model,
-                next(train_dataloader.get_batches(batch_index)),
-                hidden_states,
-                criterion,
-                optimizer,
+                model, next(train_dataloader.get_batches(batch_index)), hidden_states, criterion, optimizer, lr_scheduler
             )
 
     def _eval_on_epoch(
-        self,
-        model: LSTMModel,
-        eval_dataloader: LanguageModelingDataLoader,
-        criterion: CrossEntropyLoss,
+            self,
+            model: LSTMModel,
+            eval_dataloader: LanguageModelingDataLoader,
+            criterion: CrossEntropyLoss,
     ) -> None:
         self._clean_gradients(model)
         self._put_model_to_eval_mode(model)
         with torch.no_grad():
             hidden_states = model.init_hidden_states(self.batch_size)
             for batch_index in tqdm(
-                range(0, len(eval_dataloader), eval_dataloader.bptt),
-                desc=EVAL_DESCRIPTION_MESSAGE,
+                    range(0, len(eval_dataloader), eval_dataloader.bptt),
+                    desc=EVAL_DESCRIPTION_MESSAGE,
             ):
                 hidden_states = self._eval_on_batch(
                     model,
@@ -185,14 +175,8 @@ class Trainer(TrainerUtils):
                     criterion,
                 )
 
-    def _train_on_batch(
-        self,
-        model: LSTMModel,
-        sequences_of_ids: Tuple[tensor, tensor],
-        hidden_states: Tuple[tensor, tensor],
-        criterion: CrossEntropyLoss,
-        optimizer: Optimizer,
-    ) -> Tuple[tensor, tensor]:
+    def _train_on_batch(self, model: LSTMModel, sequences_of_ids: Tuple[tensor, tensor], hidden_states: Tuple[tensor, tensor],
+                        criterion: CrossEntropyLoss, optimizer: Optimizer, lr_scheduler: CyclicLR = None) -> Tuple[tensor, tensor]:
         predictions, hidden_states = self._get_model_output(
             model, sequences_of_ids[0], hidden_states
         )
@@ -203,17 +187,21 @@ class Trainer(TrainerUtils):
         self._compute_gradients(loss)
         self._apply_gradient_descent(optimizer)
         self._clean_gradients(model)
+        if lr_scheduler and self._logger:
+            lr_scheduler.step()
+            self._logger.log_learning_rate(lr_scheduler.get_last_lr(), self.train_iteration, LEARNING_RATE_TAG)
+            self._logger.log_loss(loss, self.train_iteration, TRAIN_LOSS_TAG)
         if self._logger:
             self._logger.log_loss(loss, self.train_iteration, TRAIN_LOSS_TAG)
         self.train_iteration = self._increment_iteration(self.train_iteration)
         return hidden_states
 
     def _eval_on_batch(
-        self,
-        model: LSTMModel,
-        sequence_of_ids: Tuple[tensor, tensor],
-        hidden_states: Tuple[tensor, tensor],
-        criterion: CrossEntropyLoss,
+            self,
+            model: LSTMModel,
+            sequence_of_ids: Tuple[tensor, tensor],
+            hidden_states: Tuple[tensor, tensor],
+            criterion: CrossEntropyLoss,
     ) -> Tuple[tensor, tensor]:
         predictions, hidden_states = self._get_model_output(
             model, sequence_of_ids[0], hidden_states

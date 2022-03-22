@@ -41,12 +41,12 @@ def test_trainer_train_method_should_call_train_on_epoch_n_times_when_n_epochs_i
     n_epochs = 3
 
     # When
-    trainer.train(model, train_dataloader, criterion, optimizer, None, n_epochs)
+    trainer.train(model, train_dataloader, criterion, optimizer, eval_dataloader=None, n_epochs=n_epochs)
 
     # Then
     put_model_on_the_device_mock.assert_called()
     train_on_epoch_mock.assert_called_with(
-        model, train_dataloader, criterion, optimizer
+        model, train_dataloader, criterion, optimizer, None
     )
     assert train_on_epoch_mock.call_count == n_epochs
 
@@ -71,9 +71,7 @@ def test_trainer_train_method_should_call_eval_on_epoch_n_times_when_n_epochs_is
     n_epochs = 3
 
     # When
-    trainer.train(
-        model, train_dataloader, criterion, optimizer, eval_dataloader, n_epochs
-    )
+    trainer.train(model, train_dataloader, criterion, optimizer, eval_dataloader=eval_dataloader, n_epochs=n_epochs)
 
     # Then
     put_model_on_the_device_mock.assert_called()
@@ -111,7 +109,7 @@ def test_trainer_train_on_epoch_should_call_other_training_utils_methods(
     optimizer = "c"
 
     # When
-    trainer._train_on_epoch(model, train_dataloader, criterion, optimizer)
+    trainer._train_on_epoch(model, train_dataloader, criterion, optimizer, None)
 
     # Then
     clean_gradients_mock.assert_called_with(model)
@@ -223,9 +221,7 @@ def test_trainer_train_on_batch_should_call_other_training_utils_method(
     compute_loss_mock.return_value = mock_for_compute_loss_return
 
     # When
-    _ = trainer._train_on_batch(
-        model, sequence_of_ids, hidden_states, criterion, optimizer
-    )
+    _ = trainer._train_on_batch(model, sequence_of_ids, hidden_states, criterion, optimizer)
 
     # Then
     get_model_output_mock.assert_called_with(model, first_sequence_value, hidden_states)
@@ -342,9 +338,7 @@ def test_trainer_train_on_batch_should_call_other_training_utils_method_when_a_l
     mock_for_compute_loss_return = MagicMock()
     compute_loss_mock.return_value = mock_for_compute_loss_return
     # When
-    _ = trainer._train_on_batch(
-        model, sequence_of_ids, hidden_states, criterion, optimizer
-    )
+    _ = trainer._train_on_batch(model, sequence_of_ids, hidden_states, criterion, optimizer)
 
     # Then
     get_model_output_mock.assert_called_with(model, first_sequence_value, hidden_states)
@@ -500,6 +494,18 @@ def test_trainer_utils_apply_gradient_descent_should_call_the_optimizer_step_met
 
     # Then
     optimizer_mock.step.assert_called()
+
+
+def test_trainer_utils_apply_lr_scheduler_should_call_the_lr_scheduler_step_method():
+    # Given
+    trainer = TrainerUtils()
+    lr_scheduler_mock = MagicMock()
+
+    # When
+    trainer._apply_lr_scheduler(lr_scheduler_mock)
+
+    # Then
+    lr_scheduler_mock.step.assert_called()
 
 
 def test_trainer_utils_put_tensors_on_the_should_call_the_to_method_with_correct_device():

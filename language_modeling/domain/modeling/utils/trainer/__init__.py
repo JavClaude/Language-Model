@@ -1,3 +1,4 @@
+LEARNING_RATE_TAG = "learning rate"
 TRAIN_LOSS_TAG = "train loss"
 EVAL_LOSS_TAG = "eval loss"
 EVAL_DESCRIPTION_MESSAGE = "evaluating model..."

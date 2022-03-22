@@ -9,6 +9,9 @@ class TensorboardLogger(BaseLogger):
     def __init__(self, log_dir: str = None) -> None:
         self._writer = SummaryWriter(log_dir=log_dir)
 
+    def log_learning_rate(self, lr: float, iteration: int, tag: str) -> None:
+        self._writer.add_scalar(scalar_value=lr, global_step=iteration, tag=tag)
+
     def log_loss(self, loss: float, iteration: int, tag: str) -> None:
         self._writer.add_scalar(scalar_value=loss, global_step=iteration, tag=tag)
 

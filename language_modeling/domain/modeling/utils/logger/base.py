@@ -5,6 +5,10 @@ class BaseLogger:
     pass
 
     @abstractmethod
+    def log_learning_rate(self) -> None:
+        pass
+
+    @abstractmethod
     def log_loss(self) -> None:
         pass
 

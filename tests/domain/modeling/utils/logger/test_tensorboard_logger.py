@@ -7,6 +7,26 @@ from language_modeling.domain.modeling.utils.logger.tensorboard_logger import (
 
 # TO DO path the summary writer object / __init__, for each run of a test a folder is created
 
+@patch(
+    "language_modeling.domain.modeling.utils.logger.tensorboard_logger.SummaryWriter.add_scalar"
+)
+def test_tensorboard_logger_log_learning_should_call_the_summary_writer_add_scalar_method_with_correct_parameters(
+    add_scalar_mock,
+):
+    # Given
+    tensorboard_logger = TensorboardLogger()
+    learning_rate = 0.0001
+    iteration = 1
+    tag_value = "learning rate"
+
+    # When
+    tensorboard_logger.log_loss(learning_rate, iteration, tag_value)
+
+    # Then
+    add_scalar_mock.assert_called_with(
+        scalar_value=learning_rate, global_step=iteration, tag=tag_value
+    )
+
 
 @patch(
     "language_modeling.domain.modeling.utils.logger.tensorboard_logger.SummaryWriter.add_scalar"
