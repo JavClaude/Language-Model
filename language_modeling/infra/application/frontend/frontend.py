@@ -168,8 +168,3 @@ class FrontEndBuilder:
     @staticmethod
     def _add_application_generated_text_field(generated_text: str) -> None:
         st.write(generated_text)
-
-
-if __name__ == "__main__":
-    frontend_builder = FrontEndBuilder()
-    frontend_builder.build_frontend()
