@@ -3,6 +3,8 @@ version: '3'
 
 services:
   frontend:
+    env_file:
+      - .env
     container_name: frontend
     build:
       dockerfile: Dockerfile
@@ -10,6 +12,8 @@ services:
       - ${STREAMLIT_SERVER_PORT}:${STREAMLIT_SERVER_PORT}
 
   deep-learning:
+    env_file:
+      - .env
     container_name: deep-learning
     build:
       dockerfile: dl_service.Dockerfile
