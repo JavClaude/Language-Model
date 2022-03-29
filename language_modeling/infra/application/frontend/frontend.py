@@ -1,8 +1,9 @@
-import time
+import os
 from typing import List, Tuple
 
 import streamlit as st
 from streamlit.delta_generator import DeltaGenerator
+import requests
 
 from language_modeling.infra.application.frontend import (
     FRONTEND_TITLE,
@@ -29,6 +30,9 @@ from language_modeling.infra.application.frontend import (
     GENERATED_SEQUENCE_LABEL_NAME,
     RUNNING_INFERENCE_MESSAGE,
 )
+from language_modeling.infra.application.deep_learning_service.service import GENERATE_TEXT_ROOT_PATH
+
+DEEP_LEARNING_SERVICE_PORT = os.environ["DEEP_LEARNING_SERVICE_PORT"]
 
 
 class FrontEndBuilder:
@@ -81,7 +85,7 @@ class FrontEndBuilder:
         return st.columns(NUMBER_OF_COLUMNS_TO_GENERATE)
 
     def _add_application_description_metrics(
-        self, columns: List[DeltaGenerator]
+            self, columns: List[DeltaGenerator]
     ) -> None:
         self._add_metric(
             columns[FIRST_COLUMN_METRIC_INDEX],
@@ -101,7 +105,7 @@ class FrontEndBuilder:
 
     @staticmethod
     def _add_metric(
-        column: DeltaGenerator, metric_label: str, metric_value: str
+            column: DeltaGenerator, metric_label: str, metric_value: str
     ) -> None:
         column.metric(metric_label, metric_value)
 
@@ -112,7 +116,7 @@ class FrontEndBuilder:
         return st.columns([FIRST_COLUMN_SIZE, SECOND_COLUMN_SIZE])
 
     def _add_application_first_container(
-        self, container: DeltaGenerator
+            self, container: DeltaGenerator
     ) -> Tuple[int, bool]:
         with container:
             maximum_number_of_tokens_to_generate = (
@@ -154,12 +158,22 @@ class FrontEndBuilder:
 
     @staticmethod
     def _send_request_to_the_backend_deep_learning_service(
-        maximum_number_of_tokens_to_generate: int, text_seed: str
+            maximum_number_of_tokens_to_generate: int, text_seed: str
     ) -> str:
         with st.spinner(RUNNING_INFERENCE_MESSAGE):
             # perform request here
-            time.sleep(3)
-        return "fake output"
+            response = requests.post(
+                "{}:{}{}".format(
+                    "deep-learning",
+                    DEEP_LEARNING_SERVICE_PORT,
+                    GENERATE_TEXT_ROOT_PATH,
+                ),
+                json={
+                    "seed_str": text_seed,
+                    "maximum_sequence_length": maximum_number_of_tokens_to_generate,
+                    "top_k_word": 2
+                })
+        return response.content
 
     @staticmethod
     def _add_application_header_for_generated_text() -> None:

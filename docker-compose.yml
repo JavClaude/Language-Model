@@ -10,7 +10,7 @@ services:
       - ${STREAMLIT_SERVER_PORT}:${STREAMLIT_SERVER_PORT}
 
   deep-learning:
-    container_name: learning
+    container_name: deep-learning
     build:
       dockerfile: dl_service.Dockerfile
     ports:

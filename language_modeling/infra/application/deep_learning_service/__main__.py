@@ -4,8 +4,11 @@ import uvicorn
 
 from language_modeling.infra.application.deep_learning_service.service.service import DeepLearningService
 from language_modeling.infra.application.deep_learning_service.utils.load_artifacts import ArtifactsLoader
+
+
 DEEP_LEARNING_SERVICE_PORT = os.environ.get("DEEP_LEARNING_SERVICE_PORT")
 PATH_TO_DEEP_LEARNING_ARTIFACTS = os.environ.get("PATH_TO_DEEP_LEARNING_ARTIFACTS")
+
 
 def main():
     artifacts_loader = ArtifactsLoader()
