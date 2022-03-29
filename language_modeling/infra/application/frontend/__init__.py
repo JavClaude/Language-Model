@@ -1,0 +1,25 @@
+FRONTEND_TITLE = "Financial news generator ⚡"
+TEXT_INPUT_LABEL = "Seed str"
+TEXT_INPUT_PLACEHOLDER = "Write something"
+TEXT_INPUT_MAX_CHARS = 64
+FIRST_COLUMN_SIZE = 0.7
+SECOND_COLUMN_SIZE = 1
+NUMBER_INPUT_LABEL = "Maximum number of tokens to generate"
+NUMBER_INPUT_MINIMUM_VALUE = 1
+NUMBER_INPUT_MAXIMUM_VALUE = 256
+APPLICATION_DESCRIPTION_HEADER = "Description"
+APPLICATION_DESCRIPTION_CONTENT = (
+    "The aim of this tiny application is to generate french financial news"
+)
+NUMBER_OF_COLUMNS_TO_GENERATE = 3
+FIRST_COLUMN_METRIC_INDEX = 0
+SECOND_COLUMN_METRIC_INDEX = 1
+THIRD_COLUMN_METRIC_INDEX = 2
+GENERATE_SEQUENCE_BUTTON_LABEL = "Generate sequence"
+DEFAULT_METRIC_VALUE = "XXXX"
+FIRST_METRIC_LABEL_NAME = "Tokens in training dataset"
+SECOND_METRIC_LABEL_NAME = "Number of model parameters"
+THIRD_METRIC_LABEL_NAME = "Model PPL on test"
+ERROR_MESSAGE_WHEN_TEXT_INPUT_IS_EMPTY = "Please enter a text seed to the model"
+GENERATED_SEQUENCE_LABEL_NAME = "Generated sequence"
+RUNNING_INFERENCE_MESSAGE = "Running inference..."
