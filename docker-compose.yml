@@ -1,0 +1,17 @@
+version: '3'
+
+
+services:
+  frontend:
+    container_name: frontend
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - ${STREAMLIT_SERVER_PORT}:${STREAMLIT_SERVER_PORT}
+
+  deep-learning:
+    container_name: learning
+    build:
+      dockerfile: dl_service.Dockerfile
+    ports:
+      - ${DEEP_LEARNING_SERVICE_PORT}:${DEEP_LEARNING_SERVICE_PORT}
