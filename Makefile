@@ -1,6 +1,6 @@
-.PHONY: all build_package install_package quality-checks run-tests
+.PHONY: all build_package install_package quality-checks unit-tests
 
-all: build_package install_package quality-checks run-tests
+all: build_package install_package quality-checks unit-tests
 
 build_package:
 	@echo "*** installing the build package ***"
